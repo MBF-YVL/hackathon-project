@@ -15,7 +15,7 @@ def load_grid_data():
         grid_file = current_app.config['GRID_FILE']
         if os.path.exists(grid_file):
             try:
-                _grid_cache = gpd.read_file(grid_file)
+            _grid_cache = gpd.read_file(grid_file)
             except ImportError:
                 # Fallback for Windows when fiona/pyogrio not available
                 from shapely.geometry import shape

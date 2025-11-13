@@ -5,25 +5,18 @@
 'use client';
 
 import React from 'react';
-import { CellDetails, ScenarioParams } from '@/types';
+import { CellDetails } from '@/types';
 
 interface CellDetailsPanelProps {
   cell: CellDetails | null;
-  scenarioParams: ScenarioParams;
   onClose: () => void;
 }
 
-export default function CellDetailsPanel({ cell, scenarioParams, onClose }: CellDetailsPanelProps) {
+export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProps) {
   if (!cell) return null;
 
   const metrics = cell.metrics;
   const interventions = cell.interventions;
-  
-  // Check if scenario is active
-  const isScenarioActive = scenarioParams.car !== 0 || scenarioParams.trees !== 0 || scenarioParams.transit !== 0;
-  
-  // Use scenario CSI when active, otherwise current CSI
-  const displayedCSI = isScenarioActive ? metrics.csi_scenario : metrics.csi_current;
 
   return (
     <div className="absolute top-20 right-6 z-10 bg-slate-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-700 w-96 max-h-[calc(100vh-7rem)] overflow-y-auto">
@@ -47,20 +40,18 @@ export default function CellDetailsPanel({ cell, scenarioParams, onClose }: Cell
         <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
           <div className="text-center">
             <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">
-              City Stress Index {isScenarioActive && <span className="text-cyan-400">(Scenario)</span>}
+              City Stress Index
             </div>
             <div className="text-4xl font-bold text-white">
-              {Math.round(displayedCSI)}
+              {Math.round(metrics.csi_current)}
             </div>
             <div className="text-xs text-slate-400 mt-1">
               out of 100
             </div>
-            {isScenarioActive && metrics.csi_scenario !== metrics.csi_current && (
-              <div className="mt-2 text-sm text-slate-400">
-                <span>Current: {Math.round(metrics.csi_current)}</span>
-                <span className="text-emerald-400 ml-2">
-                  ({metrics.csi_current - metrics.csi_scenario > 0 ? '-' : '+'}
-                  {Math.abs(Math.round(metrics.csi_current - metrics.csi_scenario))} points)
+            {metrics.csi_scenario !== metrics.csi_current && (
+              <div className="mt-2 text-sm">
+                <span className="text-cyan-400 font-semibold">
+                  → {Math.round(metrics.csi_scenario)} in 2035
                 </span>
               </div>
             )}
@@ -172,25 +163,25 @@ function InterventionCard({
 }) {
   return (
     <div className="p-3 rounded-lg border border-slate-600 bg-slate-800/30">
-      <div className="flex-1">
+        <div className="flex-1">
         <div className="font-semibold text-sm text-white">{title}</div>
         <div className="text-xs text-slate-300 mt-0.5">{detail}</div>
-        {impact < 0 && (
+          {impact < 0 && (
           <div className="text-xs text-emerald-400 font-semibold mt-1">
-            Expected CSI reduction: {Math.abs(Math.round(impact))} points
-          </div>
-        )}
-        <div className="mt-2 flex items-center gap-2">
+              Expected CSI reduction: {Math.abs(Math.round(impact))} points
+            </div>
+          )}
+          <div className="mt-2 flex items-center gap-2">
           <span className="text-[10px] text-slate-400">Priority:</span>
           <div className="flex-1 bg-slate-700 rounded-full h-1.5">
-            <div
+              <div
               className="bg-slate-400 h-1.5 rounded-full"
-              style={{ width: `${score * 100}%` }}
-            ></div>
-          </div>
+                style={{ width: `${score * 100}%` }}
+              ></div>
+            </div>
           <span className="text-xs font-semibold text-white">
-            {(score * 100).toFixed(0)}%
-          </span>
+              {(score * 100).toFixed(0)}%
+            </span>
         </div>
       </div>
     </div>

@@ -23,153 +23,53 @@ CELL_SIZE_LAT = 0.00225
 
 def get_montreal_boundary():
     """
-    Create Montreal Island boundary - precise coverage matching actual island
+    Create Montreal Island boundary - accurate coverage of the island only
     Montreal Island is bounded by:
     - North: Rivière des Prairies (separates from Laval)
     - South: St. Lawrence River (separates from Longueuil)  
     - East: Bout-de-l'Île (Pointe-aux-Trembles)
     - West: Lac Saint-Louis (Sainte-Anne-de-Bellevue)
     
-    Enhanced with 100+ points for accurate coastline following
+    Using proper coordinates that follow the actual island shape
     """
-    # Montreal Island boundary - high-precision polygon following actual coastline
-    # Based on OpenStreetMap data and official Montreal boundaries
+    # Montreal Island boundary - following the actual island coastline
+    # Coordinates are (longitude, latitude) in EPSG:4326
+    # Simplified Montreal Island boundary - proper oval shape covering the island
+    # Going clockwise from southwest corner
     boundary_coords = [
-        # Southwest corner - Verdun/LaSalle
-        (-73.975, 45.418),
-        (-73.970, 45.418),
-        (-73.965, 45.417),
-        (-73.960, 45.416),
-        (-73.955, 45.415),
-        # South shore - St. Lawrence River (west to east through neighborhoods)
-        # LaSalle
-        (-73.950, 45.414),
-        (-73.940, 45.413),
-        (-73.930, 45.412),
-        (-73.920, 45.411),
-        # Verdun
-        (-73.910, 45.410),
-        (-73.900, 45.410),
-        (-73.890, 45.410),
-        (-73.880, 45.410),
-        # Southwest downtown edge
-        (-73.870, 45.409),
-        (-73.860, 45.409),
-        (-73.850, 45.409),
-        (-73.840, 45.409),
-        (-73.830, 45.410),
-        # Old Port / St. Lawrence shoreline
-        (-73.820, 45.410),
-        (-73.810, 45.411),
-        (-73.800, 45.412),
-        (-73.790, 45.413),
-        (-73.780, 45.414),
-        (-73.770, 45.415),
-        (-73.760, 45.416),
-        (-73.750, 45.417),
-        # Hochelaga-Maisonneuve
-        (-73.740, 45.418),
-        (-73.730, 45.420),
-        (-73.720, 45.422),
-        (-73.710, 45.424),
-        (-73.700, 45.426),
-        (-73.690, 45.429),
-        (-73.680, 45.432),
-        (-73.670, 45.435),
-        # Mercier-Est
-        (-73.660, 45.438),
-        (-73.650, 45.441),
-        (-73.640, 45.444),
-        (-73.630, 45.447),
-        (-73.620, 45.450),
-        (-73.610, 45.453),
-        (-73.600, 45.456),
-        (-73.590, 45.460),
-        # Rivière-des-Prairies (southeast)
-        (-73.580, 45.464),
-        (-73.570, 45.468),
-        (-73.560, 45.472),
-        (-73.550, 45.477),
-        (-73.540, 45.482),
-        (-73.530, 45.487),
-        (-73.520, 45.492),
-        (-73.510, 45.497),
-        # Pointe-aux-Trembles - East tip
-        (-73.500, 45.502),
-        (-73.495, 45.507),
-        (-73.492, 45.512),
-        (-73.490, 45.517),
-        (-73.488, 45.522),
-        (-73.487, 45.527),
-        (-73.486, 45.532),
-        (-73.486, 45.537),
-        (-73.487, 45.542),
-        (-73.488, 45.547),
-        (-73.490, 45.552),
-        # Northeast corner - turning north
-        (-73.493, 45.557),
-        (-73.497, 45.562),
-        (-73.502, 45.567),
-        (-73.508, 45.572),
-        (-73.515, 45.576),
-        (-73.523, 45.580),
-        (-73.532, 45.584),
-        (-73.541, 45.587),
-        (-73.550, 45.590),
-        # North shore - Rivière des Prairies (east to west)
-        # Rivière-des-Prairies (north)
-        (-73.560, 45.593),
-        (-73.570, 45.596),
-        (-73.580, 45.599),
-        (-73.590, 45.602),
-        (-73.600, 45.604),
-        (-73.610, 45.606),
-        (-73.620, 45.608),
-        (-73.630, 45.610),
-        (-73.640, 45.611),
-        (-73.650, 45.612),
-        (-73.660, 45.612),
-        (-73.670, 45.611),
-        (-73.680, 45.610),
-        # Montréal-Nord / Ahuntsic
-        (-73.690, 45.608),
-        (-73.700, 45.606),
-        (-73.710, 45.603),
-        (-73.720, 45.600),
-        (-73.730, 45.596),
-        (-73.740, 45.592),
-        (-73.750, 45.587),
-        (-73.760, 45.582),
-        # Cartierville
-        (-73.770, 45.576),
-        (-73.780, 45.570),
-        (-73.790, 45.564),
-        (-73.800, 45.557),
-        (-73.810, 45.550),
-        (-73.820, 45.543),
-        # Pierrefonds-Roxboro
-        (-73.830, 45.536),
-        (-73.840, 45.528),
-        (-73.850, 45.520),
-        (-73.860, 45.511),
-        (-73.870, 45.502),
-        (-73.880, 45.493),
-        (-73.890, 45.484),
-        (-73.900, 45.475),
-        # Île-Bizard connector
-        (-73.910, 45.467),
-        (-73.920, 45.459),
-        (-73.930, 45.451),
-        (-73.940, 45.444),
-        # West Island - Sainte-Anne-de-Bellevue
-        (-73.945, 45.440),
-        (-73.950, 45.436),
-        (-73.955, 45.432),
-        (-73.960, 45.428),
-        (-73.965, 45.424),
-        (-73.970, 45.421),
-        # Close polygon
-        (-73.975, 45.418),
+        # Southwest - LaSalle/Verdun
+        (-73.97, 45.42),
+        # South shore along St. Lawrence River (west to east)
+        (-73.95, 45.42),
+        (-73.90, 45.42),
+        (-73.85, 45.42),
+        (-73.80, 45.42),
+        (-73.75, 45.43),
+        (-73.70, 45.44),
+        (-73.65, 45.45),
+        # Southeast - Mercier/Hochelaga
+        (-73.60, 45.47),
+        (-73.55, 45.49),
+        # East tip - Pointe-aux-Trembles
+        (-73.50, 45.52),
+        # Northeast - turning north
+        (-73.50, 45.54),
+        (-73.52, 45.56),
+        (-73.55, 45.58),
+        # North shore along Rivière des Prairies (east to west)
+        (-73.60, 45.60),
+        (-73.65, 45.62),
+        (-73.70, 45.63),
+        (-73.75, 45.63),
+        (-73.80, 45.62),
+        (-73.85, 45.60),
+        # Northwest - Pierrefonds/Roxboro
+        (-73.90, 45.57),
+        (-73.93, 45.54),
+        # West - Sainte-Anne-de-Bellevue
+        (-73.95, 45.50),
+        (-73.96, 45.46),
+        (-73.97, 45.42),
     ]
     
     from shapely.geometry import Polygon

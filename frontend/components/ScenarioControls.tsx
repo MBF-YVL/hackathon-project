@@ -205,12 +205,12 @@ export default function ScenarioControls({
               <div className="px-3 py-2 bg-slate-800 border-b border-slate-600">
                 <h4 className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider">
                   Prediction
-                </h4>
+              </h4>
               </div>
               <div className="p-3 bg-slate-800/30 max-h-48 overflow-y-auto">
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {narrative}
-                </p>
+                {narrative}
+              </p>
               </div>
             </div>
           )}
