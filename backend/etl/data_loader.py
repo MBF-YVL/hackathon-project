@@ -10,9 +10,10 @@ import numpy as np
 from shapely.geometry import Point
 
 # Data directories
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-DATA_RAW = PROJECT_ROOT / 'data' / 'raw'
-DATA_PROCESSED = PROJECT_ROOT / 'data' / 'processed'
+SCRIPT_DIR = Path(__file__).parent
+BACKEND_ROOT = SCRIPT_DIR.parent
+DATA_RAW = BACKEND_ROOT / 'data' / 'raw'
+DATA_PROCESSED = BACKEND_ROOT / 'data' / 'processed'
 
 def file_exists(filename):
     """Check if a data file exists"""
@@ -74,6 +75,18 @@ def load_noise_data():
 
 def load_traffic_segments_data():
     """Load traffic segments geometry or return None"""
+    # Try CSV first
+    csv_path = DATA_RAW / 'traffic_segments.csv'
+    if csv_path.exists():
+        try:
+            print(f"  ✓ Loading real traffic segments from {csv_path.name}")
+            df = pd.read_csv(csv_path)
+            print(f"    Loaded {len(df)} traffic segments")
+            return df
+        except Exception as e:
+            print(f"  ✗ Error loading traffic segments CSV: {e}")
+    
+    # Try GeoJSON
     filepath = DATA_RAW / 'traffic_segments.geojson'
     if filepath.exists():
         try:
@@ -247,12 +260,12 @@ def check_data_availability():
         'Air Quality': 'air_quality.csv',
         'Heat Islands': 'heat_islands.geojson',
         'Noise': 'noise.csv',
-        'Traffic Segments': 'traffic_segments.geojson',
+        'Traffic Segments': 'traffic_segments.csv',
         'Travel Times': 'travel_times.csv',
         'Trees': 'trees.csv',
         'Planting Sites': 'planting_sites.csv',
         'Canopy': 'canopy.geojson',
-        'Vulnerability': 'vulnerability/',
+        'Vulnerability': 'vulnerability.geojson',
     }
     
     for name, filename in files_to_check.items():
