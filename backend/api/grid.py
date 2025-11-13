@@ -13,10 +13,18 @@ def load_grid_data():
     global _grid_cache
     if _grid_cache is None:
         grid_file = current_app.config['GRID_FILE']
+        
+        if not os.path.isabs(grid_file):
+            from pathlib import Path
+            backend_dir = Path(__file__).parent.parent
+            grid_file = str(backend_dir / grid_file)
+        
         if os.path.exists(grid_file):
             try:
                 _grid_cache = gpd.read_file(grid_file)
-            except ImportError:
+                print(f"Loaded grid: {len(_grid_cache)} cells from {grid_file}")
+            except Exception as e:
+                print(f"Error loading grid with geopandas: {e}")
                 from shapely.geometry import shape
                 with open(grid_file, 'r', encoding='utf-8') as f:
                     geojson = json.load(f)
@@ -26,7 +34,9 @@ def load_grid_data():
                     props = feature['properties']
                     features.append({**props, 'geometry': geom})
                 _grid_cache = gpd.GeoDataFrame(features, crs='EPSG:4326')
+                print(f"Loaded grid (fallback): {len(_grid_cache)} cells")
         else:
+            print(f"Grid file not found: {grid_file}")
             return {"type": "FeatureCollection", "features": []}
     return _grid_cache
 
@@ -44,14 +54,24 @@ def get_grid():
         if isinstance(grid_data, dict):
             return jsonify(grid_data)
         
+        if grid_data is None or (hasattr(grid_data, 'empty') and grid_data.empty):
+            return jsonify({"type": "FeatureCollection", "features": []})
+        
         if scenario == '2035' or car != 0 or trees != 0 or transit != 0:
             from scenario_engine import apply_scenario_adjustments
             grid_data = apply_scenario_adjustments(grid_data.copy(), car, trees, transit)
         
         geojson = json.loads(grid_data.to_json())
+        
+        if 'features' not in geojson or len(geojson['features']) == 0:
+            print(f"Warning: GeoJSON has no features. Grid data type: {type(grid_data)}, length: {len(grid_data) if hasattr(grid_data, '__len__') else 'N/A'}")
+        
         return jsonify(geojson)
     
     except Exception as e:
+        import traceback
+        print(f"Error in get_grid: {e}")
+        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/trees', methods=['GET'])
@@ -87,4 +107,3 @@ def reload_grid():
     _grid_cache = None
     load_grid_data()
     return jsonify({'message': 'Grid data reloaded successfully'})
-

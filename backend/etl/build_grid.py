@@ -1,91 +1,128 @@
-"""Build Montreal Grid - Creates a 250m x 250m grid covering Montréal"""
+"""Build Montreal Grid - Creates a 250m x 250m grid covering Montréal and Laval (clipped to exact city boundaries)"""
 import geopandas as gpd
 from shapely.geometry import Polygon
+from shapely.ops import unary_union
 import os
-
-MONTREAL_BOUNDS = {
-    'min_lat': 45.38,
-    'max_lat': 45.70,
-    'min_lon': -73.98,
-    'max_lon': -73.40
-}
+from pathlib import Path
 
 CELL_SIZE_LON = 0.00317
 CELL_SIZE_LAT = 0.00225
 
-def get_montreal_boundary():
-    """Create Montreal Island boundary polygon"""
-    boundary_coords = [
-        (-73.975, 45.395),
-        (-73.950, 45.390),
-        (-73.920, 45.387),
-        (-73.890, 45.385),
-        (-73.860, 45.384),
-        (-73.830, 45.384),
-        (-73.800, 45.385),
-        (-73.770, 45.387),
-        (-73.740, 45.390),
-        (-73.710, 45.394),
-        (-73.680, 45.399),
-        (-73.650, 45.405),
-        (-73.620, 45.413),
-        (-73.590, 45.422),
-        (-73.560, 45.433),
-        (-73.530, 45.445),
-        (-73.505, 45.458),
-        (-73.470, 45.475),
-        (-73.450, 45.495),
-        (-73.435, 45.515),
-        (-73.425, 45.535),
-        (-73.420, 45.555),
-        (-73.420, 45.575),
-        (-73.425, 45.595),
-        (-73.435, 45.615),
-        (-73.450, 45.630),
-        (-73.470, 45.643),
-        (-73.495, 45.652),
-        (-73.525, 45.658),
-        (-73.550, 45.662),
-        (-73.580, 45.665),
-        (-73.610, 45.667),
-        (-73.640, 45.667),
-        (-73.670, 45.665),
-        (-73.700, 45.665),
-        (-73.730, 45.662),
-        (-73.760, 45.655),
-        (-73.790, 45.645),
-        (-73.820, 45.630),
-        (-73.850, 45.610),
-        (-73.880, 45.585),
-        (-73.910, 45.560),
-        (-73.930, 45.525),
-        (-73.945, 45.505),
-        (-73.955, 45.485),
-        (-73.965, 45.465),
-        (-73.970, 45.420),
-        (-73.973, 45.407),
-        (-73.975, 45.395),
-    ]
+def get_montreal_laval_boundary():
+    """
+    Get combined boundary for Montreal agglomeration and (optionally) Laval.
+    If Laval boundary data is unavailable, fall back to Montreal-only boundary to
+    avoid rendering inaccurate rectangular coverage.
+    """
+    data_dir = Path(__file__).parent.parent / 'data' / 'raw'
+    montreal_file = data_dir / 'montreal_boundary.geojson'
+    laval_file = data_dir / 'laval_boundary.geojson'
     
-    poly = Polygon(boundary_coords)
-    if not poly.is_valid:
-        poly = poly.buffer(0)
-    return poly
+    montreal_boundary = None
+    if montreal_file.exists():
+        try:
+            gdf = gpd.read_file(montreal_file)
+            print(f"    Loaded {len(gdf)} Montreal administrative polygons")
+            montreal_boundary = unary_union(gdf.geometry)
+        except Exception as e:
+            print(f"    Error loading Montreal boundary: {e}")
+    
+    if montreal_boundary is None:
+        print("    Montreal boundary file not found, using hardcoded boundary coordinates")
+        boundary_coords = [
+            (-73.975, 45.395),
+            (-73.950, 45.390),
+            (-73.920, 45.387),
+            (-73.890, 45.385),
+            (-73.860, 45.384),
+            (-73.830, 45.384),
+            (-73.800, 45.385),
+            (-73.770, 45.387),
+            (-73.740, 45.390),
+            (-73.710, 45.394),
+            (-73.680, 45.399),
+            (-73.650, 45.405),
+            (-73.620, 45.413),
+            (-73.590, 45.422),
+            (-73.560, 45.433),
+            (-73.530, 45.445),
+            (-73.505, 45.458),
+            (-73.470, 45.475),
+            (-73.450, 45.495),
+            (-73.435, 45.515),
+            (-73.425, 45.535),
+            (-73.420, 45.555),
+            (-73.420, 45.575),
+            (-73.425, 45.595),
+            (-73.435, 45.615),
+            (-73.450, 45.630),
+            (-73.470, 45.643),
+            (-73.495, 45.652),
+            (-73.525, 45.658),
+            (-73.550, 45.662),
+            (-73.580, 45.665),
+            (-73.610, 45.667),
+            (-73.640, 45.667),
+            (-73.670, 45.665),
+            (-73.700, 45.665),
+            (-73.730, 45.662),
+            (-73.760, 45.655),
+            (-73.790, 45.645),
+            (-73.820, 45.630),
+            (-73.850, 45.610),
+            (-73.880, 45.585),
+            (-73.910, 45.560),
+            (-73.930, 45.525),
+            (-73.945, 45.505),
+            (-73.955, 45.485),
+            (-73.965, 45.465),
+            (-73.970, 45.420),
+            (-73.973, 45.407),
+            (-73.975, 45.395),
+        ]
+        montreal_boundary = Polygon(boundary_coords)
+        if not montreal_boundary.is_valid:
+            montreal_boundary = montreal_boundary.buffer(0)
+    
+    combined_boundary = montreal_boundary
+    
+    # Skip Laval for now - focus on Montreal only to avoid inaccurate coverage
+    # If Laval boundary file exists and is accurate, uncomment below
+    # if laval_file.exists():
+    #     try:
+    #         laval_gdf = gpd.read_file(laval_file)
+    #         laval_boundary = unary_union(laval_gdf.geometry)
+    #         combined_boundary = unary_union([montreal_boundary, laval_boundary])
+    #         print("    Laval boundary detected and merged with Montreal boundary")
+    #     except Exception as e:
+    #         print(f"    Error loading Laval boundary ({e}). Proceeding with Montreal only.")
+    # else:
+    print("    Focusing on Montreal coverage only (Laval excluded)")
+    
+    if not combined_boundary.is_valid:
+        combined_boundary = combined_boundary.buffer(0)
+    
+    print(f"    Project boundary area: {combined_boundary.area:.4f} sq degrees")
+    return combined_boundary
 
 def create_grid():
-    """Create a square grid covering Montréal, clipped to city boundaries"""
+    """Create a square grid covering Montréal, clipped to exact boundaries"""
     print("Creating Montreal grid...")
     
-    montreal_boundary = get_montreal_boundary()
-    print(f"Montreal boundary area: {montreal_boundary.area:.4f} sq degrees")
+    boundary = get_montreal_laval_boundary()
+    
+    bounds = boundary.bounds
+    min_lon, min_lat, max_lon, max_lat = bounds
+    
+    print(f"Boundary bounds: lon [{min_lon:.4f}, {max_lon:.4f}], lat [{min_lat:.4f}, {max_lat:.4f}]")
     
     cells = []
     cell_id = 1
     
-    lon = MONTREAL_BOUNDS['min_lon']
-    while lon < MONTREAL_BOUNDS['max_lon']:
-        lat = MONTREAL_BOUNDS['min_lat']
-        while lat < MONTREAL_BOUNDS['max_lat']:
+    lon = min_lon
+    while lon < max_lon:
+        lat = min_lat
+        while lat < max_lat:
             cell = Polygon([
                 (lon, lat),
                 (lon + CELL_SIZE_LON, lat),
@@ -94,19 +131,24 @@ def create_grid():
                 (lon, lat)
             ])
             
-            if cell.intersects(montreal_boundary):
-                clipped_cell = cell.intersection(montreal_boundary)
-                if clipped_cell.area / cell.area > 0.3:
-                    cells.append({
-                        'id': f'cell_{cell_id}',
-                        'geometry': cell
-                    })
-                    cell_id += 1
+            if cell.intersects(boundary):
+                clipped_cell = cell.intersection(boundary)
+                # Only include cells with significant overlap (>30% of original cell area)
+                # This ensures we don't include tiny edge fragments
+                if not clipped_cell.is_empty and clipped_cell.area > 0:
+                    original_area = cell.area
+                    clipped_area = clipped_cell.area
+                    if clipped_area / original_area > 0.3:
+                        cells.append({
+                            'id': f'cell_{cell_id}',
+                            'geometry': cell  # Use original square cell for consistency
+                        })
+                        cell_id += 1
             
             lat += CELL_SIZE_LAT
         lon += CELL_SIZE_LON
     
-    print(f"Created {len(cells)} grid cells (clipped to Montreal boundaries)")
+    print(f"Created {len(cells)} grid cells (clipped to Montreal boundary only)")
     
     gdf = gpd.GeoDataFrame(cells, crs='EPSG:4326')
     

@@ -115,10 +115,14 @@ export default function CityPulseMap({
 
     // Hotspots Layer (highlight high CSI cells)
     if (layersVisible.hotspots && gridData) {
+      // Use threshold of 60 to match backend, but highlight with red border
       const hotspotFeatures = {
         type: "FeatureCollection" as const,
         features: gridData.features.filter(
-          (f: GeoJSONFeature) => f.properties.csi_current > 70
+          (f: GeoJSONFeature) => {
+            const csi = f.properties.csi_current || 0;
+            return csi > 60; // Match backend HOTSPOT_THRESHOLD
+          }
         ),
       };
 
@@ -130,9 +134,10 @@ export default function CityPulseMap({
             pickable: false,
             stroked: true,
             filled: false,
-            getLineColor: [255, 0, 0, 200],
-            getLineWidth: 3,
-            lineWidthMinPixels: 2,
+            getLineColor: [255, 0, 0, 255],
+            getLineWidth: 4,
+            lineWidthMinPixels: 3,
+            lineWidthMaxPixels: 6,
           } as any)
         );
       }

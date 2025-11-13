@@ -1,5 +1,5 @@
 """Cell API endpoints - Handles requests for individual cell details"""
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, current_app
 import json
 import os
 
@@ -12,22 +12,11 @@ def get_cell(cell_id):
         from api.grid import load_grid_data
         from ai_services import generate_cell_summary
         
-        # Get scenario parameters from query string
-        car = float(request.args.get('car', 0.0))
-        trees = float(request.args.get('trees', 0.0))
-        transit = float(request.args.get('transit', 0.0))
-        
         grid_data = load_grid_data()
         
         if isinstance(grid_data, dict):
             return jsonify({'error': 'Grid data not available'}), 404
         
-        # Apply scenario adjustments if any parameters are set
-        if car != 0 or trees != 0 or transit != 0:
-            from scenario_engine import apply_scenario_adjustments
-            grid_data = apply_scenario_adjustments(grid_data.copy(), car, trees, transit)
-        
-        # Find the cell
         cell = grid_data[grid_data['id'] == cell_id]
         
         if cell.empty:
@@ -35,7 +24,6 @@ def get_cell(cell_id):
         
         cell_row = cell.iloc[0]
         
-        # Extract metrics
         metrics = {
             'csi_current': float(cell_row.get('csi_current', 0)),
             'csi_scenario': float(cell_row.get('csi_scenario', 0)),
@@ -47,7 +35,6 @@ def get_cell(cell_id):
             'vulnerability_factor': float(cell_row.get('vulnerability_factor', 0))
         }
         
-        # Extract interventions
         interventions = {
             'trees': {
                 'score': float(cell_row.get('tree_score', 0)),
@@ -66,7 +53,6 @@ def get_cell(cell_id):
             }
         }
         
-        # Generate AI summary
         summary = generate_cell_summary(cell_id, metrics, interventions)
         
         return jsonify({
@@ -79,9 +65,11 @@ def get_cell(cell_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+HOTSPOT_THRESHOLD = 60  # Match frontend threshold for consistency
+
 @bp.route('/hotspots', methods=['GET'])
 def get_hotspots():
-    """Get identified stress hotspots (CSI > 70)"""
+    """Get identified stress hotspots (CSI > 60)"""
     try:
         from api.grid import load_grid_data
         import numpy as np
@@ -91,8 +79,7 @@ def get_hotspots():
         if isinstance(grid_data, dict):
             return jsonify([])
         
-        threshold = 60
-        hotspot_cells = grid_data[grid_data['csi_current'] > threshold]
+        hotspot_cells = grid_data[grid_data['csi_current'] > HOTSPOT_THRESHOLD]
         
         if hotspot_cells.empty:
             return jsonify([])
@@ -133,4 +120,3 @@ def get_top_drivers(cell):
     
     sorted_drivers = sorted(drivers.items(), key=lambda x: x[1], reverse=True)
     return [d[0] for d in sorted_drivers[:3] if d[1] > 0.5]
-

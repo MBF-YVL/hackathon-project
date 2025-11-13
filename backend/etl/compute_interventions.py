@@ -2,6 +2,8 @@
 import geopandas as gpd
 import numpy as np
 from pathlib import Path
+from shapely.geometry import Point
+from data_loader import load_planting_sites_data
 
 SCRIPT_DIR = Path(__file__).parent
 DATA_DIR = SCRIPT_DIR.parent / 'data'
@@ -125,41 +127,129 @@ def compute_transit_interventions(grid_gdf):
     return grid_gdf
 
 def generate_tree_planting_sites(grid_gdf):
-    """Generate sample tree planting sites GeoJSON"""
+    """Generate tree planting sites GeoJSON from real dataset when available"""
     print("Generating tree planting sites...")
     
-    # Select top priority cells for tree planting
-    top_cells = grid_gdf.nlargest(100, 'tree_score')
-    
-    # Create point features for planting sites
-    sites = []
-    for idx, cell in top_cells.iterrows():
-        centroid = cell.geometry.centroid
-        sites.append({
-            'type': 'Feature',
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [centroid.x, centroid.y]
-            },
-            'properties': {
-                'cell_id': cell['id'],
-                'priority_score': float(cell['tree_score']),
-                'recommended_trees': int(cell['tree_count'])
+    planting_sites = load_planting_sites_data()
+    if planting_sites is not None and not planting_sites.empty:
+        print(f"    Using {len(planting_sites)} real planting site records")
+        
+        # Filter planting sites to be within grid boundary and prioritize non-downtown areas
+        grid_boundary = grid_gdf.unary_union
+        planting_sites = planting_sites[
+            planting_sites.geometry.intersects(grid_boundary)
+        ].copy()
+        print(f"    Retained {len(planting_sites)} sites inside project boundary")
+        
+        # If we have too many sites, prioritize those in areas with high tree need
+        if len(planting_sites) > 500:
+            # Join with grid to get tree scores
+            temp_join = gpd.sjoin(
+                planting_sites,
+                grid_gdf[['id', 'tree_score', 'traffic_stress', 'crowding_stress', 'geometry']],
+                predicate='within',
+                how='left'
+            )
+            # Filter to prioritize areas with high tree need but lower traffic/crowding
+            temp_join = temp_join[
+                (temp_join['tree_score'] > 0.4) &
+                (temp_join['traffic_stress'] < 0.8) &
+                (temp_join['crowding_stress'] < 0.7)
+            ]
+            if len(temp_join) > 0:
+                planting_sites = planting_sites[planting_sites.index.isin(temp_join.index)]
+                print(f"    Filtered to {len(planting_sites)} priority sites (high tree need, lower traffic)")
+        
+        grid_for_join = (
+            grid_gdf[['id', 'tree_score', 'tree_count', 'geometry']]
+            .rename(columns={'id': 'cell_id'})
+            .copy()
+        )
+        joined = gpd.sjoin(
+            planting_sites,
+            grid_for_join,
+            predicate='within',
+            how='left'
+        )
+        median_score = joined['tree_score'].median()
+        if np.isnan(median_score):
+            median_score = 0.0
+        joined['priority_score'] = joined['tree_score'].fillna(median_score)
+        joined['recommended_trees'] = joined['tree_count'].fillna(0).astype(int).clip(lower=0)
+        
+        features = []
+        for row in joined.itertuples():
+            cell_id = getattr(row, 'cell_id', None)
+            if cell_id is not None and (isinstance(cell_id, float) and np.isnan(cell_id)):
+                cell_id = None
+            
+            priority_score = getattr(row, 'priority_score', 0.0)
+            if isinstance(priority_score, float) and np.isnan(priority_score):
+                priority_score = 0.0
+            
+            recommended_trees = getattr(row, 'recommended_trees', 0)
+            if isinstance(recommended_trees, float) and np.isnan(recommended_trees):
+                recommended_trees = 0
+            
+            props = {
+                'cell_id': cell_id,
+                'priority_score': float(priority_score),
+                'recommended_trees': int(recommended_trees),
+                'status': getattr(row, 'Statut', None),
+                'site_state': getattr(row, 'Etat_site', None),
+                'site_type': getattr(row, 'Type_emp', None),
             }
-        })
+            props = {k: v for k, v in props.items() if v is not None or k == 'cell_id'}
+            features.append({
+                'type': 'Feature',
+                'geometry': row.geometry.__geo_interface__,
+                'properties': props
+            })
+        
+        planting_geojson = {
+            'type': 'FeatureCollection',
+            'features': features
+        }
+    else:
+        print("    Real planting site data unavailable - using synthetic centroids")
+        # Filter to areas with high tree need but exclude downtown (high traffic/crowding)
+        # Prioritize areas with high heat/air stress and low canopy, but not in dense urban core
+        filtered_cells = grid_gdf[
+            (grid_gdf['tree_score'] > 0.5) &  # High tree priority
+            (grid_gdf['canopy'] < 0.4) &  # Low canopy coverage
+            (grid_gdf['traffic_stress'] < 0.8) &  # Not in heavy traffic areas
+            (grid_gdf['crowding_stress'] < 0.7)  # Not in dense urban core
+        ].copy()
+        
+        if len(filtered_cells) > 0:
+            top_cells = filtered_cells.nlargest(100, 'tree_score')
+        else:
+            # Fallback: use top tree_score cells but prioritize heat/air over traffic
+            top_cells = grid_gdf.nlargest(100, 'tree_score')
+        
+        features = []
+        for _, cell in top_cells.iterrows():
+            centroid = cell.geometry.centroid
+            features.append({
+                'type': 'Feature',
+                'geometry': Point(centroid.x, centroid.y).__geo_interface__,
+                'properties': {
+                    'cell_id': cell['id'],
+                    'priority_score': float(cell['tree_score']),
+                    'recommended_trees': int(cell['tree_count']),
+                    'status': None,
+                    'site_state': None,
+                    'site_type': 'synthetic'
+                }
+            })
+        planting_geojson = {'type': 'FeatureCollection', 'features': features}
     
-    planting_geojson = {
-        'type': 'FeatureCollection',
-        'features': sites
-    }
-    
-    # Save to file
     import json
     output_file = PROCESSED_DIR / 'planting_sites.geojson'
     with open(output_file, 'w') as f:
         json.dump(planting_geojson, f)
     
-    print(f"✓ Generated {len(sites)} planting sites")
+    print(f"✓ Generated {len(planting_geojson['features'])} planting sites")
     return planting_geojson
 
 def generate_tree_locations(grid_gdf):
