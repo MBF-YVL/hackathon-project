@@ -53,7 +53,8 @@ export default function CityPulseMap({
     const layerList: any[] = [];
 
     // CSI Grid Layer
-    if (layersVisible.csi && gridData) {
+    if (layersVisible.csi && gridData && gridData.features && gridData.features.length > 0) {
+      console.log(`Rendering ${gridData.features.length} grid cells`);
       layerList.push(
         new GeoJsonLayer({
           id: "csi-grid",
@@ -62,12 +63,17 @@ export default function CityPulseMap({
           stroked: true,
           filled: true,
           extruded: false,
-          getFillColor: (d: any) => getCSIColor(d.properties.csi_current),
-          getLineColor: [200, 200, 200, 50],
+          opacity: 0.8,
+          getFillColor: (d: any) => {
+            const color = getCSIColor(d.properties.csi_current);
+            return color;
+          },
+          getLineColor: [255, 255, 255, 80],
           getLineWidth: 1,
           lineWidthMinPixels: 0.5,
           onClick: (info: any) => {
             if (info.object) {
+              console.log('Cell clicked:', info.object.properties.id);
               onCellClick(info.object.properties.id);
             }
           },

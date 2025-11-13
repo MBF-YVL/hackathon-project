@@ -75,6 +75,8 @@ export default function Home() {
       setIsLoading(true);
       setError('');
 
+      console.log('Loading data from backend...');
+
       // Load all data in parallel
       const [grid, trees, sites] = await Promise.all([
         api.getGrid(),
@@ -82,12 +84,19 @@ export default function Home() {
         api.getPlantingSites(),
       ]);
 
+      console.log('Data loaded:', {
+        gridCells: grid.features?.length || 0,
+        trees: trees.features?.length || 0,
+        sites: sites.features?.length || 0
+      });
+
       setGridData(grid);
       setTreesData(trees);
       setPlantingSitesData(sites);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading data:', err);
-      setError('Failed to load data. Make sure the backend is running on http://localhost:5001');
+      const errorMessage = err.message || 'Unknown error';
+      setError(`Failed to load data: ${errorMessage}. Make sure the backend is running on http://localhost:5001`);
     } finally {
       setIsLoading(false);
     }
