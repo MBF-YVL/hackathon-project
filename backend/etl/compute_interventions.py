@@ -1,7 +1,4 @@
-"""
-Compute Interventions
-Calculate intervention scores and recommendations for each grid cell
-"""
+"""Compute Interventions - Calculate intervention scores for grid cells"""
 import geopandas as gpd
 import numpy as np
 from pathlib import Path
@@ -91,8 +88,6 @@ def compute_transit_interventions(grid_gdf):
     """
     print("Computing transit interventions...")
     
-    # Simulate transit access score (0-1, where 1 = good access)
-    # For hackathon: inverse of distance from center
     from shapely.geometry import Point
     montreal_center = Point(-73.567256, 45.508888)
     dist_to_center = grid_gdf.geometry.centroid.distance(montreal_center)

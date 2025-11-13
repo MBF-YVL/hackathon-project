@@ -79,7 +79,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
                   style={{ backgroundColor: "rgb(220, 200, 70)" }}
                 ></div>
                 <span className="text-[11px] text-slate-600">
-                  40-70: Moderate
+                  40-65: Moderate
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
                   className="w-3 h-3 rounded"
                   style={{ backgroundColor: "rgb(220, 20, 60)" }}
                 ></div>
-                <span className="text-[11px] text-slate-600">70-100: High</span>
+                <span className="text-[11px] text-slate-600">65-100: High</span>
               </div>
             </div>
           </div>

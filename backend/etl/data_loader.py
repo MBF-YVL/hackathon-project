@@ -1,7 +1,4 @@
-"""
-Data Loader Module
-Handles loading real datasets with fallback to simulated data
-"""
+"""Data Loader - Handles loading real datasets with fallback to simulated data"""
 import os
 from pathlib import Path
 import pandas as pd

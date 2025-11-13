@@ -1,7 +1,4 @@
-"""
-Compute Features with Real Data Processing
-Enhanced version that properly processes Montréal open datasets
-"""
+"""Compute Features - Processes Montréal open datasets"""
 import os
 import geopandas as gpd
 import pandas as pd

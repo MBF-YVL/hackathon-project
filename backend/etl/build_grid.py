@@ -1,93 +1,84 @@
-"""
-Build Montreal Grid
-Creates a 250m x 250m grid covering Montréal (clipped to city boundaries)
-"""
+"""Build Montreal Grid - Creates a 250m x 250m grid covering Montréal"""
 import geopandas as gpd
-import numpy as np
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon
 import os
 
-# Montreal bounding box (approximate)
 MONTREAL_BOUNDS = {
-    'min_lat': 45.40,
+    'min_lat': 45.38,
     'max_lat': 45.70,
     'min_lon': -73.98,
-    'max_lon': -73.47
+    'max_lon': -73.40
 }
 
-# Grid cell size in degrees (approximately 250m at Montreal's latitude)
-# At 45.5°N: 1° longitude ≈ 78.8 km, 1° latitude ≈ 111.2 km
-# 250m ≈ 0.00317° longitude, 0.00225° latitude
 CELL_SIZE_LON = 0.00317
 CELL_SIZE_LAT = 0.00225
 
 def get_montreal_boundary():
-    """
-    Create Montreal Island boundary - accurate coverage of the island only
-    Montreal Island is bounded by:
-    - North: Rivière des Prairies (separates from Laval)
-    - South: St. Lawrence River (separates from Longueuil)  
-    - East: Bout-de-l'Île (Pointe-aux-Trembles)
-    - West: Lac Saint-Louis (Sainte-Anne-de-Bellevue)
-    
-    Using proper coordinates that follow the actual island shape
-    """
-    # Montreal Island boundary - following the actual island coastline
-    # Coordinates are (longitude, latitude) in EPSG:4326
-    # Simplified Montreal Island boundary - proper oval shape covering the island
-    # Going clockwise from southwest corner
+    """Create Montreal Island boundary polygon"""
     boundary_coords = [
-        # Southwest - LaSalle/Verdun
-        (-73.97, 45.42),
-        # South shore along St. Lawrence River (west to east)
-        (-73.95, 45.42),
-        (-73.90, 45.42),
-        (-73.85, 45.42),
-        (-73.80, 45.42),
-        (-73.75, 45.43),
-        (-73.70, 45.44),
-        (-73.65, 45.45),
-        # Southeast - Mercier/Hochelaga
-        (-73.60, 45.47),
-        (-73.55, 45.49),
-        # East tip - Pointe-aux-Trembles
-        (-73.50, 45.52),
-        # Northeast - turning north
-        (-73.50, 45.54),
-        (-73.52, 45.56),
-        (-73.55, 45.58),
-        # North shore along Rivière des Prairies (east to west)
-        (-73.60, 45.60),
-        (-73.65, 45.62),
-        (-73.70, 45.63),
-        (-73.75, 45.63),
-        (-73.80, 45.62),
-        (-73.85, 45.60),
-        # Northwest - Pierrefonds/Roxboro
-        (-73.90, 45.57),
-        (-73.93, 45.54),
-        # West - Sainte-Anne-de-Bellevue
-        (-73.95, 45.50),
-        (-73.96, 45.46),
-        (-73.97, 45.42),
+        (-73.975, 45.395),
+        (-73.950, 45.390),
+        (-73.920, 45.387),
+        (-73.890, 45.385),
+        (-73.860, 45.384),
+        (-73.830, 45.384),
+        (-73.800, 45.385),
+        (-73.770, 45.387),
+        (-73.740, 45.390),
+        (-73.710, 45.394),
+        (-73.680, 45.399),
+        (-73.650, 45.405),
+        (-73.620, 45.413),
+        (-73.590, 45.422),
+        (-73.560, 45.433),
+        (-73.530, 45.445),
+        (-73.505, 45.458),
+        (-73.470, 45.475),
+        (-73.450, 45.495),
+        (-73.435, 45.515),
+        (-73.425, 45.535),
+        (-73.420, 45.555),
+        (-73.420, 45.575),
+        (-73.425, 45.595),
+        (-73.435, 45.615),
+        (-73.450, 45.630),
+        (-73.470, 45.643),
+        (-73.495, 45.652),
+        (-73.525, 45.658),
+        (-73.550, 45.662),
+        (-73.580, 45.665),
+        (-73.610, 45.667),
+        (-73.640, 45.667),
+        (-73.670, 45.665),
+        (-73.700, 45.665),
+        (-73.730, 45.662),
+        (-73.760, 45.655),
+        (-73.790, 45.645),
+        (-73.820, 45.630),
+        (-73.850, 45.610),
+        (-73.880, 45.585),
+        (-73.910, 45.560),
+        (-73.930, 45.525),
+        (-73.945, 45.505),
+        (-73.955, 45.485),
+        (-73.965, 45.465),
+        (-73.970, 45.420),
+        (-73.973, 45.407),
+        (-73.975, 45.395),
     ]
     
-    from shapely.geometry import Polygon
     poly = Polygon(boundary_coords)
-    # Make sure it's valid
     if not poly.is_valid:
-        poly = poly.buffer(0)  # Fix any topology issues
+        poly = poly.buffer(0)
     return poly
 
 def create_grid():
     """Create a square grid covering Montréal, clipped to city boundaries"""
     print("Creating Montreal grid...")
     
-    # Get Montreal boundary
     montreal_boundary = get_montreal_boundary()
     print(f"Montreal boundary area: {montreal_boundary.area:.4f} sq degrees")
     
-    # Generate grid cells
     cells = []
     cell_id = 1
     
@@ -95,7 +86,6 @@ def create_grid():
     while lon < MONTREAL_BOUNDS['max_lon']:
         lat = MONTREAL_BOUNDS['min_lat']
         while lat < MONTREAL_BOUNDS['max_lat']:
-            # Create cell polygon
             cell = Polygon([
                 (lon, lat),
                 (lon + CELL_SIZE_LON, lat),
@@ -104,29 +94,22 @@ def create_grid():
                 (lon, lat)
             ])
             
-            # Only keep cells that intersect with Montreal boundary
             if cell.intersects(montreal_boundary):
-                # Clip cell to boundary
                 clipped_cell = cell.intersection(montreal_boundary)
-                
-                # Only keep if significant overlap (>30% to include edge neighborhoods)
                 if clipped_cell.area / cell.area > 0.3:
                     cells.append({
                         'id': f'cell_{cell_id}',
-                        'geometry': cell  # Keep original square for consistency
+                        'geometry': cell
                     })
                     cell_id += 1
             
             lat += CELL_SIZE_LAT
-        
         lon += CELL_SIZE_LON
     
     print(f"Created {len(cells)} grid cells (clipped to Montreal boundaries)")
     
-    # Create GeoDataFrame
     gdf = gpd.GeoDataFrame(cells, crs='EPSG:4326')
     
-    # Initialize default stress values (will be computed later)
     gdf['air_stress'] = 0.5
     gdf['heat_stress'] = 0.5
     gdf['noise_stress'] = 0.5
@@ -135,7 +118,6 @@ def create_grid():
     gdf['vulnerability_factor'] = 1.0
     gdf['canopy'] = 0.3
     
-    # Compute initial CSI
     weights = {'air': 0.20, 'heat': 0.25, 'noise': 0.15, 'traffic': 0.25, 'crowding': 0.15}
     base_csi = (
         weights['air'] * gdf['air_stress'] +
@@ -148,7 +130,6 @@ def create_grid():
     gdf['csi_current'] = (base_csi * (0.5 + 0.5 * gdf['vulnerability_factor'])).clip(0, 100)
     gdf['csi_scenario'] = gdf['csi_current']
     
-    # Initialize intervention scores (will be computed later)
     gdf['tree_score'] = 0.0
     gdf['tree_count'] = 0
     gdf['tree_delta_csi'] = 0
@@ -168,20 +149,15 @@ def save_grid(gdf, output_path):
     print(f"Grid saved to {output_path}")
 
 if __name__ == '__main__':
-    # Create output directory
     output_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'processed')
     os.makedirs(output_dir, exist_ok=True)
     
-    # Build grid
     grid = create_grid()
     
-    # Save to file
     output_path = os.path.join(output_dir, 'montreal_grid.geojson')
     save_grid(grid, output_path)
     
-    # Also save as citypulse_grid.geojson (final output name)
     final_path = os.path.join(output_dir, 'citypulse_grid.geojson')
     save_grid(grid, final_path)
     
     print("Grid creation complete!")
-
