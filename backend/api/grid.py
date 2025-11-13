@@ -14,7 +14,19 @@ def load_grid_data():
     if _grid_cache is None:
         grid_file = current_app.config['GRID_FILE']
         if os.path.exists(grid_file):
-            _grid_cache = gpd.read_file(grid_file)
+            try:
+                _grid_cache = gpd.read_file(grid_file)
+            except ImportError:
+                # Fallback for Windows when fiona/pyogrio not available
+                from shapely.geometry import shape
+                with open(grid_file, 'r', encoding='utf-8') as f:
+                    geojson = json.load(f)
+                features = []
+                for feature in geojson['features']:
+                    geom = shape(feature['geometry'])
+                    props = feature['properties']
+                    features.append({**props, 'geometry': geom})
+                _grid_cache = gpd.GeoDataFrame(features, crs='EPSG:4326')
         else:
             return {"type": "FeatureCollection", "features": []}
     return _grid_cache

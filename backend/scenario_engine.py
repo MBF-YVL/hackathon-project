@@ -39,7 +39,8 @@ def apply_scenario_adjustments(grid_data: gpd.GeoDataFrame, car: float, trees: f
     ) * 100
     
     vulnerability = gdf.get('vulnerability_factor', 1.0)
-    gdf['csi_scenario'] = (base_csi * (0.5 + 0.5 * vulnerability)).clip(0, 100)
+    vulnerability_multiplier = 0.7 + 0.3 * vulnerability  # Range: 0.7 to 1.0
+    gdf['csi_scenario'] = (base_csi * vulnerability_multiplier).clip(0, 100)
     
     return gdf
 

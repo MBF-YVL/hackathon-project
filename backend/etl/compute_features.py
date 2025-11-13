@@ -87,8 +87,9 @@ def compute_air_stress_from_real_data(grid_gdf):
                         pm25 = station_data['PM2.5'].iloc[0] if not pd.isna(station_data['PM2.5'].iloc[0]) else 0
                         no2 = station_data['NO2'].iloc[0] if not pd.isna(station_data['NO2'].iloc[0]) else 0
                         
-                        # Normalize: PM2.5 WHO guideline = 5 µg/m³, NO2 = 10 µg/m³
-                        stress = min(1.0, (pm25 / 25 * 0.6 + no2 / 40 * 0.4))
+                        # Normalize: PM2.5 >12 is high stress, NO2 >20 is high stress
+                        # Scale so typical urban values (8-15) map to 0.5-0.9
+                        stress = min(1.0, (pm25 / 12 * 0.6 + no2 / 20 * 0.4))
                         
                         total_stress += stress * weight
                         total_weight += weight
@@ -162,14 +163,15 @@ def compute_heat_stress_from_real_data(grid_gdf):
             
             for idx, row in grid_gdf.iterrows():
                 cell_id = row['id']
-                heat_intensity = 0.5
+                heat_intensity = 0.7  # Base urban heat (typical Montreal summer)
                 if cell_id in heat_grouped.index:
                     # More heat island overlaps = higher stress
-                    heat_intensity = min(1.0, 0.3 + (heat_grouped[cell_id] * 0.2))
+                    heat_intensity = min(1.0, 0.6 + (heat_grouped[cell_id] * 0.15))
                 
-                # Combine: high heat, low canopy = high stress
+                # Combine: low canopy amplifies heat stress significantly
                 canopy_val = grid_gdf.at[idx, 'canopy']
-                grid_gdf.at[idx, 'heat_stress'] = heat_intensity * (1 - canopy_val * 0.5)
+                # Areas with 0% canopy get full heat stress, 50% canopy reduces by 40%
+                grid_gdf.at[idx, 'heat_stress'] = heat_intensity * (1 - canopy_val * 0.8)
             
             print(f"    Computed heat stress with real heat island data")
         except Exception as e:
@@ -384,7 +386,10 @@ def compute_csi(grid_gdf):
         weights['crowding'] * grid_gdf['crowding_stress']
     ) * 100
     
-    grid_gdf['csi_current'] = (base_csi * (0.5 + 0.5 * grid_gdf['vulnerability_factor'])).clip(0, 100)
+    # Apply vulnerability as a moderate multiplier to spread values without extreme compression
+    # Scale base_csi (0-100) with vulnerability (0.6-1.0 range) to get better distribution
+    vulnerability_multiplier = 0.7 + 0.3 * grid_gdf['vulnerability_factor']  # Range: 0.7 to 1.0
+    grid_gdf['csi_current'] = (base_csi * vulnerability_multiplier).clip(0, 100)
     grid_gdf['csi_scenario'] = grid_gdf['csi_current']
     
     return grid_gdf

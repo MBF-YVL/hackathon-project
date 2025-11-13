@@ -30,7 +30,7 @@ const INITIAL_VIEW_STATE: ViewState = {
   longitude: -73.567256,
   latitude: 45.508888,
   zoom: 11,
-  pitch: 0,
+  pitch: 45,
   bearing: 0,
 };
 
@@ -58,7 +58,7 @@ export default function CityPulseMap({
 
   // Create deck.gl layers
   const layers = useMemo(() => {
-    const layerList: (GeoJsonLayer | ScatterplotLayer)[] = [];
+    const layerList: any[] = [];
 
     // CSI Grid Layer
     if (
@@ -70,19 +70,44 @@ export default function CityPulseMap({
       layerList.push(
         new GeoJsonLayer({
           id: "csi-grid",
-          // @ts-expect-error - GeoJSON type compatibility with deck.gl
-          data: gridData,
+          data: gridData as any,
           pickable: true,
-          stroked: true,
+          stroked: false,
           filled: true,
-          extruded: false,
+          extruded: true,
+          wireframe: true,
           opacity: 0.8,
-          // @ts-expect-error - Color type compatibility with deck.gl
-          getFillColor: (d: GeoJSONFeature) =>
-            getCSIColor(d.properties.csi_current),
-          getLineColor: [255, 255, 255, 80],
-          getLineWidth: 1,
-          lineWidthMinPixels: 0.5,
+          autoHighlight: true,
+          highlightColor: [255, 255, 255, 100],
+          getFillColor: (d: any) => {
+            const color = getCSIColor(d.properties.csi_current);
+            // Add more alpha for filled polygons
+            return [...color.slice(0, 3), 180];
+          },
+          getLineColor: (d: any) => {
+            const color = getCSIColor(d.properties.csi_current);
+            // Make wireframe slightly darker for contrast
+            return [
+              Math.max(0, color[0] - 40),
+              Math.max(0, color[1] - 40),
+              Math.max(0, color[2] - 40),
+              255,
+            ];
+          },
+          getElevation: (d: any) => {
+            // Map CSI (0-100) to elevation (0-1000 meters)
+            // Square root for better visual distribution
+            return Math.sqrt(d.properties.csi_current / 100) * 1000;
+          },
+          elevationScale: 1,
+          getLineWidth: 2,
+          lineWidthMinPixels: 1,
+          material: {
+            ambient: 0.35,
+            diffuse: 0.6,
+            shininess: 32,
+            specularColor: [30, 30, 30],
+          },
           onClick: (info: PickingInfo<GeoJSONFeature>) => {
             if (info.object) {
               onCellClick(info.object.properties.id);
@@ -90,8 +115,10 @@ export default function CityPulseMap({
           },
           updateTriggers: {
             getFillColor: [gridData],
+            getLineColor: [gridData],
+            getElevation: [gridData],
           },
-        })
+        } as any)
       );
     }
 
@@ -100,7 +127,7 @@ export default function CityPulseMap({
       const hotspotFeatures = {
         type: "FeatureCollection" as const,
         features: gridData.features.filter(
-          (f: GeoJSONFeature) => f.properties.csi_current > 60
+          (f: GeoJSONFeature) => f.properties.csi_current > 70
         ),
       };
 
@@ -108,15 +135,14 @@ export default function CityPulseMap({
         layerList.push(
           new GeoJsonLayer({
             id: "hotspots",
-            // @ts-expect-error - GeoJSON type compatibility with deck.gl
-            data: hotspotFeatures,
+            data: hotspotFeatures as any,
             pickable: false,
             stroked: true,
             filled: false,
             getLineColor: [255, 0, 0, 200],
             getLineWidth: 3,
             lineWidthMinPixels: 2,
-          })
+          } as any)
         );
       }
     }
