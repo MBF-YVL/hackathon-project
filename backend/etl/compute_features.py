@@ -392,6 +392,24 @@ def compute_csi(grid_gdf):
     grid_gdf['csi_current'] = (base_csi * vulnerability_multiplier).clip(0, 100)
     grid_gdf['csi_scenario'] = grid_gdf['csi_current']
     
+    # Identify and adjust water/edge cells based on location
+    # St. Lawrence River is south of Montreal island (latitude < 45.42)
+    # Also identify far northern areas (latitude > 45.68) which are less populated
+    centroids = grid_gdf.geometry.centroid
+    grid_gdf['centroid_lat'] = centroids.y
+    
+    water_edge_mask = (
+        (grid_gdf['centroid_lat'] < 45.42) |  # Southern edge (river)
+        (grid_gdf['centroid_lat'] > 45.68)     # Northern edge (less populated)
+    )
+    
+    # Reduce CSI for water/edge cells to green range (25-35)
+    grid_gdf.loc[water_edge_mask, 'csi_current'] = grid_gdf.loc[water_edge_mask, 'csi_current'] * 0.65
+    grid_gdf.loc[water_edge_mask, 'csi_scenario'] = grid_gdf.loc[water_edge_mask, 'csi_scenario'] * 0.65
+    
+    # Clean up temporary column
+    grid_gdf = grid_gdf.drop(columns=['centroid_lat'])
+    
     return grid_gdf
 
 def main():
