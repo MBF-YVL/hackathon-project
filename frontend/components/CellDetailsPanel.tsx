@@ -5,18 +5,25 @@
 'use client';
 
 import React from 'react';
-import { CellDetails } from '@/types';
+import { CellDetails, ScenarioParams } from '@/types';
 
 interface CellDetailsPanelProps {
   cell: CellDetails | null;
+  scenarioParams: ScenarioParams;
   onClose: () => void;
 }
 
-export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProps) {
+export default function CellDetailsPanel({ cell, scenarioParams, onClose }: CellDetailsPanelProps) {
   if (!cell) return null;
 
   const metrics = cell.metrics;
   const interventions = cell.interventions;
+  
+  // Check if scenario is active
+  const isScenarioActive = scenarioParams.car !== 0 || scenarioParams.trees !== 0 || scenarioParams.transit !== 0;
+  
+  // Use scenario CSI when active, otherwise current CSI
+  const displayedCSI = isScenarioActive ? metrics.csi_scenario : metrics.csi_current;
 
   return (
     <div className="absolute top-20 right-6 z-10 bg-slate-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-700 w-96 max-h-[calc(100vh-7rem)] overflow-y-auto">
@@ -40,18 +47,20 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
         <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
           <div className="text-center">
             <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">
-              City Stress Index
+              City Stress Index {isScenarioActive && <span className="text-cyan-400">(Scenario)</span>}
             </div>
             <div className="text-4xl font-bold text-white">
-              {Math.round(metrics.csi_current)}
+              {Math.round(displayedCSI)}
             </div>
             <div className="text-xs text-slate-400 mt-1">
               out of 100
             </div>
-            {metrics.csi_scenario !== metrics.csi_current && (
-              <div className="mt-2 text-sm">
-                <span className="text-cyan-400 font-semibold">
-                  → {Math.round(metrics.csi_scenario)} in 2035
+            {isScenarioActive && metrics.csi_scenario !== metrics.csi_current && (
+              <div className="mt-2 text-sm text-slate-400">
+                <span>Current: {Math.round(metrics.csi_current)}</span>
+                <span className="text-emerald-400 ml-2">
+                  ({metrics.csi_current - metrics.csi_scenario > 0 ? '-' : '+'}
+                  {Math.abs(Math.round(metrics.csi_current - metrics.csi_scenario))} points)
                 </span>
               </div>
             )}

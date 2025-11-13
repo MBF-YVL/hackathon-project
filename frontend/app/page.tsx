@@ -224,6 +224,7 @@ export default function Home() {
       {selectedCell && (
         <CellDetailsPanel
           cell={selectedCell}
+          scenarioParams={scenarioParams}
           onClose={() => setSelectedCell(null)}
         />
       )}
