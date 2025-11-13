@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added - 2025-01-13
 
 #### Data Processing Complete
+
 - **ALL 9 datasets** successfully loaded and processed
 - 21,574 grid cells with real Montreal data
 - 96,361 air quality measurements from 11 RSQA stations
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 100 priority planting sites identified
 
 #### Git Commits
+
 - **1ebf6ae** - Clean up code and integrate real data processing
 - **812b0f3** - Initial commit: CityPulse Montréal 2035 hackathon prototype
 
