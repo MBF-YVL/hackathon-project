@@ -30,7 +30,7 @@ const INITIAL_VIEW_STATE: ViewState = {
   longitude: -73.567256,
   latitude: 45.508888,
   zoom: 11,
-  pitch: 45,
+  pitch: 0,
   bearing: 0,
 };
 
@@ -72,42 +72,19 @@ export default function CityPulseMap({
           id: "csi-grid",
           data: gridData as any,
           pickable: true,
-          stroked: false,
+          stroked: true,
           filled: true,
-          extruded: true,
-          wireframe: true,
+          extruded: false,
           opacity: 0.8,
           autoHighlight: true,
           highlightColor: [255, 255, 255, 100],
           getFillColor: (d: any) => {
             const color = getCSIColor(d.properties.csi_current);
-            // Add more alpha for filled polygons
-            return [...color.slice(0, 3), 180];
+            return [...color.slice(0, 3), 200];
           },
-          getLineColor: (d: any) => {
-            const color = getCSIColor(d.properties.csi_current);
-            // Make wireframe slightly darker for contrast
-            return [
-              Math.max(0, color[0] - 40),
-              Math.max(0, color[1] - 40),
-              Math.max(0, color[2] - 40),
-              255,
-            ];
-          },
-          getElevation: (d: any) => {
-            // Map CSI (0-100) to elevation (0-1000 meters)
-            // Square root for better visual distribution
-            return Math.sqrt(d.properties.csi_current / 100) * 1000;
-          },
-          elevationScale: 1,
-          getLineWidth: 2,
-          lineWidthMinPixels: 1,
-          material: {
-            ambient: 0.35,
-            diffuse: 0.6,
-            shininess: 32,
-            specularColor: [30, 30, 30],
-          },
+          getLineColor: [80, 80, 80, 100],
+          getLineWidth: 1,
+          lineWidthMinPixels: 0.5,
           onClick: (info: PickingInfo<GeoJSONFeature>) => {
             if (info.object) {
               onCellClick(info.object.properties.id);
@@ -115,8 +92,6 @@ export default function CityPulseMap({
           },
           updateTriggers: {
             getFillColor: [gridData],
-            getLineColor: [gridData],
-            getElevation: [gridData],
           },
         } as any)
       );
