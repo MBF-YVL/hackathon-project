@@ -3,12 +3,13 @@
  */
 
 export const CSI_COLOR_SCALE = [
-  [0, [34, 139, 34]], // 0-20: Dark green (low stress)
-  [20, [144, 238, 144]], // 20-40: Light green
-  [40, [255, 255, 0]], // 40-60: Yellow (moderate stress)
-  [60, [255, 165, 0]], // 60-80: Orange
-  [80, [255, 69, 0]], // 80-90: Orange-red
-  [90, [220, 20, 60]], // 90-100: Crimson (high stress)
+  [0, [50, 120, 50]], // 0-20: Muted dark green (low stress)
+  [20, [100, 180, 100]], // 20-40: Muted light green
+  [40, [220, 200, 70]], // 40-60: Muted yellow (moderate stress)
+  [60, [255, 140, 0]], // 60-70: Bright orange (more orange!)
+  [70, [255, 50, 0]], // 70-80: Red-orange 
+  [80, [220, 0, 0]], // 80-90: Bright red (more red!)
+  [90, [180, 0, 0]], // 90-100: Dark red (CRITICAL!)
 ];
 
 export function getCSIColor(csi: number): [number, number, number, number] {
