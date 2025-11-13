@@ -23,6 +23,11 @@ interface CityPulseMapProps {
     planting: boolean;
     hotspots: boolean;
   };
+  scenarioParams: {
+    car: number;
+    trees: number;
+    transit: number;
+  };
   onCellClick: (cellId: string) => void;
 }
 
@@ -39,6 +44,7 @@ export default function CityPulseMap({
   treesData,
   plantingSitesData,
   layersVisible,
+  scenarioParams,
   onCellClick,
 }: CityPulseMapProps) {
   const [viewState, setViewState] = useState<ViewState>(INITIAL_VIEW_STATE);
@@ -59,6 +65,9 @@ export default function CityPulseMap({
   // Create deck.gl layers
   const layers = useMemo(() => {
     const layerList: any[] = [];
+    
+    // Check if scenario is active
+    const isScenarioActive = scenarioParams.car !== 0 || scenarioParams.trees !== 0 || scenarioParams.transit !== 0;
 
     // CSI Grid Layer
     if (
@@ -79,7 +88,9 @@ export default function CityPulseMap({
           autoHighlight: true,
           highlightColor: [255, 255, 255, 100],
           getFillColor: (d: any) => {
-            const color = getCSIColor(d.properties.csi_current);
+            // Use scenario CSI when sliders are active, otherwise current CSI
+            const csiValue = isScenarioActive ? d.properties.csi_scenario : d.properties.csi_current;
+            const color = getCSIColor(csiValue);
             return [...color.slice(0, 3), 200];
           },
           getLineColor: [80, 80, 80, 100],
@@ -91,7 +102,7 @@ export default function CityPulseMap({
             }
           },
           updateTriggers: {
-            getFillColor: [gridData],
+            getFillColor: [gridData, scenarioParams],
           },
         } as any)
       );
@@ -185,6 +196,7 @@ export default function CityPulseMap({
     layersVisible.trees,
     layersVisible.planting,
     layersVisible.hotspots,
+    scenarioParams,
     onCellClick,
     viewState.zoom,
   ]);

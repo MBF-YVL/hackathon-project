@@ -19,16 +19,16 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
   const interventions = cell.interventions;
 
   return (
-    <div className="absolute top-24 right-6 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200 w-96 max-h-[calc(100vh-8rem)] overflow-y-auto">
+    <div className="absolute top-20 right-6 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border-0 w-96 max-h-[calc(100vh-7rem)] overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 bg-gradient-to-r from-slate-700 to-slate-600 text-white rounded-t-lg flex items-center justify-between sticky top-0">
+      <div className="px-4 py-3 bg-slate-700 text-white rounded-t-lg flex items-center justify-between sticky top-0">
         <div>
-          <h3 className="font-semibold">Cell Details</h3>
-          <p className="text-xs text-slate-200">{cell.id}</p>
+          <h3 className="font-semibold text-sm">Cell Details</h3>
+          <p className="text-[10px] text-slate-300">{cell.id}</p>
         </div>
         <button
           onClick={onClose}
-          className="text-white/80 hover:text-white text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-white/10"
+          className="text-white/80 hover:text-white text-xl font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-white/10"
         >
           ×
         </button>
@@ -66,9 +66,9 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
           <div className="space-y-2">
             <StressBar label="Air Quality" value={metrics.air_stress} color="bg-yellow-500" />
             <StressBar label="Heat" value={metrics.heat_stress} color="bg-orange-500" />
-            <StressBar label="Noise" value={metrics.noise_stress} color="bg-purple-500" />
+            <StressBar label="Noise" value={metrics.noise_stress} color="bg-blue-500" />
             <StressBar label="Traffic" value={metrics.traffic_stress} color="bg-red-500" />
-            <StressBar label="Transit Crowding" value={metrics.crowding_stress} color="bg-blue-500" />
+            <StressBar label="Transit Crowding" value={metrics.crowding_stress} color="bg-cyan-500" />
           </div>
         </div>
 
@@ -169,20 +169,15 @@ function InterventionCard({
   detail: string;
   impact: number;
 }) {
-  const priorityColor =
-    score > 0.7 ? 'bg-red-50 border-red-200' :
-    score > 0.5 ? 'bg-yellow-50 border-yellow-200' :
-    'bg-slate-50 border-slate-200';
-
   return (
-    <div className={`p-3 rounded-lg border ${priorityColor}`}>
+    <div className="p-3 rounded-lg border border-slate-200 bg-white">
       <div className="flex items-start gap-3">
-        <div className="text-2xl">{icon}</div>
+        <div className="text-xl">{icon}</div>
         <div className="flex-1">
           <div className="font-semibold text-sm text-slate-900">{title}</div>
           <div className="text-xs text-slate-600 mt-0.5">{detail}</div>
           {impact < 0 && (
-            <div className="text-xs text-green-600 font-semibold mt-1">
+            <div className="text-xs text-emerald-600 font-semibold mt-1">
               Expected CSI reduction: {Math.abs(Math.round(impact))} points
             </div>
           )}

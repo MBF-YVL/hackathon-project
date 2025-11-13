@@ -5,10 +5,11 @@
 "use client";
 
 import React from "react";
-import { ScenarioParams } from "@/types";
+import { ScenarioParams, GeoJSONFeatureCollection } from "@/types";
 
 interface ScenarioControlsProps {
   params: ScenarioParams;
+  gridData: GeoJSONFeatureCollection | null;
   onParamsChange: (params: ScenarioParams) => void;
   onGenerateNarrative: () => void;
   narrative?: string;
@@ -17,22 +18,49 @@ interface ScenarioControlsProps {
 
 export default function ScenarioControls({
   params,
+  gridData,
   onParamsChange,
   onGenerateNarrative,
   narrative,
   isGenerating = false,
 }: ScenarioControlsProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
+  
+  // Calculate CSI metrics
+  const isScenarioActive = params.car !== 0 || params.trees !== 0 || params.transit !== 0;
+  
+  const metrics = React.useMemo(() => {
+    if (!gridData || !gridData.features || gridData.features.length === 0) {
+      return null;
+    }
+    
+    const csiCurrent = gridData.features.map((f: any) => f.properties.csi_current || 0);
+    const csiScenario = gridData.features.map((f: any) => f.properties.csi_scenario || 0);
+    
+    const avgCurrent = csiCurrent.reduce((a, b) => a + b, 0) / csiCurrent.length;
+    const avgScenario = csiScenario.reduce((a, b) => a + b, 0) / csiScenario.length;
+    const hotspotsCurrent = csiCurrent.filter((v) => v > 70).length;
+    const hotspotsScenario = csiScenario.filter((v) => v > 70).length;
+    
+    return {
+      avgCurrent,
+      avgScenario,
+      reduction: avgCurrent - avgScenario,
+      hotspotsCurrent,
+      hotspotsScenario,
+      hotspotsReduced: hotspotsCurrent - hotspotsScenario,
+    };
+  }, [gridData]);
 
   return (
-    <div className="absolute top-24 left-6 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-200 w-80">
+    <div className="absolute top-20 left-6 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border-0 w-80">
       {/* Header */}
       <div
-        className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-t-lg flex items-center justify-between cursor-pointer"
+        className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-t-lg flex items-center justify-between cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h3 className="font-semibold">2035 Scenario Controls</h3>
-        <button className="text-white/90 hover:text-white">
+        <h3 className="font-semibold text-sm">2035 Scenario Controls</h3>
+        <button className="text-white/90 hover:text-white text-sm">
           {isExpanded ? "▼" : "▶"}
         </button>
       </div>
@@ -40,6 +68,35 @@ export default function ScenarioControls({
       {/* Content */}
       {isExpanded && (
         <div className="p-4 space-y-4">
+          {/* Scenario Impact Summary */}
+          {isScenarioActive && metrics && (
+            <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 space-y-2">
+              <div className="text-xs font-semibold text-cyan-900 uppercase tracking-wider">
+                Scenario Impact
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-xs text-slate-600">Avg CSI</div>
+                  <div className="font-semibold text-slate-900">
+                    {Math.round(metrics.avgScenario)}
+                    <span className="text-xs text-emerald-600 ml-1">
+                      ({metrics.reduction > 0 ? '-' : '+'}{Math.abs(Math.round(metrics.reduction))})
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-600">Hotspots</div>
+                  <div className="font-semibold text-slate-900">
+                    {metrics.hotspotsScenario}
+                    <span className="text-xs text-emerald-600 ml-1">
+                      ({metrics.hotspotsReduced > 0 ? '-' : '+'}{Math.abs(metrics.hotspotsReduced)})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Car Dependence Slider */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -128,18 +185,18 @@ export default function ScenarioControls({
           <button
             onClick={onGenerateNarrative}
             disabled={isGenerating}
-            className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-medium hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isGenerating ? "⏳ Generating..." : "✨ Generate Scenario Story"}
           </button>
 
           {/* Narrative Display */}
           {narrative && (
-            <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <h4 className="text-xs font-semibold text-purple-900 mb-2 uppercase tracking-wider">
+            <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+              <h4 className="text-xs font-semibold text-cyan-900 mb-2 uppercase tracking-wider">
                 AI Narrative
               </h4>
-              <p className="text-sm text-purple-900 leading-relaxed">
+              <p className="text-sm text-cyan-900 leading-relaxed">
                 {narrative}
               </p>
             </div>

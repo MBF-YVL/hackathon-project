@@ -183,6 +183,7 @@ export default function Home() {
           treesData={treesData}
           plantingSitesData={plantingSitesData}
           layersVisible={layersVisible}
+          scenarioParams={scenarioParams}
           onCellClick={handleCellClick}
         />
       )}
@@ -196,6 +197,7 @@ export default function Home() {
       {!isLoading && !error && (
         <ScenarioControls
           params={scenarioParams}
+          gridData={gridData}
           onParamsChange={setScenarioParams}
           onGenerateNarrative={handleGenerateNarrative}
           narrative={narrative}
