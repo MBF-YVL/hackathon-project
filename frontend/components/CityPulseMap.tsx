@@ -53,7 +53,12 @@ export default function CityPulseMap({
     const layerList: any[] = [];
 
     // CSI Grid Layer
-    if (layersVisible.csi && gridData && gridData.features && gridData.features.length > 0) {
+    if (
+      layersVisible.csi &&
+      gridData &&
+      gridData.features &&
+      gridData.features.length > 0
+    ) {
       console.log(`Rendering ${gridData.features.length} grid cells`);
       layerList.push(
         new GeoJsonLayer({
@@ -73,7 +78,7 @@ export default function CityPulseMap({
           lineWidthMinPixels: 0.5,
           onClick: (info: any) => {
             if (info.object) {
-              console.log('Cell clicked:', info.object.properties.id);
+              console.log("Cell clicked:", info.object.properties.id);
               onCellClick(info.object.properties.id);
             }
           },
@@ -192,17 +197,6 @@ export default function CityPulseMap({
         onViewStateChange={({ viewState }: any) => setViewState(viewState)}
         controller={true}
         layers={layers}
-        parameters={{
-          depthTest: false,
-          blend: true,
-          blendFunc: [
-            "SRC_ALPHA",
-            "ONE_MINUS_SRC_ALPHA",
-            "ONE",
-            "ONE_MINUS_SRC_ALPHA",
-          ],
-          blendEquation: "FUNC_ADD",
-        }}
         getTooltip={({ object }: any) => {
           if (!object) return null;
 
