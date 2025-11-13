@@ -109,7 +109,7 @@ export default function ScenarioControls({
           {/* Car Dependence Slider */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              🚗 Car Dependence Change
+              Car Dependence Change
             </label>
             <input
               type="range"
@@ -136,7 +136,7 @@ export default function ScenarioControls({
           {/* Transit Investment Slider */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              🚇 Transit Investment
+              Transit Investment
             </label>
             <input
               type="range"
@@ -166,7 +166,7 @@ export default function ScenarioControls({
           {/* Tree Investment Slider */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              🌳 Tree/Greening Investment
+              Tree/Greening Investment
             </label>
             <input
               type="range"
@@ -196,7 +196,7 @@ export default function ScenarioControls({
             disabled={isGenerating}
             className="w-full py-2 px-4 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all border border-slate-600"
           >
-            {isGenerating ? "⏳ Generating..." : "✨ Generate Scenario Story"}
+            {isGenerating ? "Generating..." : "Generate Scenario Story"}
           </button>
 
           {/* Narrative Display */}

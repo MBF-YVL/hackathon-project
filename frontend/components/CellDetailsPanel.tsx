@@ -93,11 +93,8 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
         {/* AI Summary */}
         {cell.summary && (
           <div className="p-3 bg-slate-800/50 border border-slate-600 rounded-lg">
-            <div className="text-xs text-slate-300 font-semibold mb-2 flex items-center gap-2">
-              <span>🤖 AI Analysis</span>
-              <span className="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded uppercase text-slate-300">
-                {cell.summary.source}
-              </span>
+            <div className="text-xs text-slate-300 font-semibold mb-2 uppercase tracking-wider">
+              groq
             </div>
             <p className="text-sm text-slate-300 leading-relaxed">
               {cell.summary.short}
@@ -112,21 +109,18 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
           </h4>
           <div className="space-y-2">
             <InterventionCard
-              icon="🌳"
               title="Tree Planting"
               score={interventions.trees.score}
               detail={`${interventions.trees.recommended_count} trees recommended`}
               impact={interventions.trees.expected_delta_csi}
             />
             <InterventionCard
-              icon="🚗"
               title="Car Access Limits"
               score={interventions.car_limits.score}
               detail={interventions.car_limits.type?.replace('_', ' ') || 'No intervention'}
               impact={interventions.car_limits.expected_delta_csi}
             />
             <InterventionCard
-              icon="🚇"
               title="Transit Improvements"
               score={interventions.transit.score}
               detail={interventions.transit.type?.replace('_', ' ') || 'No intervention'}
@@ -157,13 +151,11 @@ function StressBar({ label, value, color }: { label: string; value: number; colo
 }
 
 function InterventionCard({
-  icon,
   title,
   score,
   detail,
   impact,
 }: {
-  icon: string;
   title: string;
   score: number;
   detail: string;
@@ -171,28 +163,25 @@ function InterventionCard({
 }) {
   return (
     <div className="p-3 rounded-lg border border-slate-600 bg-slate-800/30">
-      <div className="flex items-start gap-3">
-        <div className="text-xl">{icon}</div>
-        <div className="flex-1">
-          <div className="font-semibold text-sm text-white">{title}</div>
-          <div className="text-xs text-slate-300 mt-0.5">{detail}</div>
-          {impact < 0 && (
-            <div className="text-xs text-emerald-400 font-semibold mt-1">
-              Expected CSI reduction: {Math.abs(Math.round(impact))} points
-            </div>
-          )}
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-[10px] text-slate-400">Priority:</span>
-            <div className="flex-1 bg-slate-700 rounded-full h-1.5">
-              <div
-                className="bg-slate-400 h-1.5 rounded-full"
-                style={{ width: `${score * 100}%` }}
-              ></div>
-            </div>
-            <span className="text-xs font-semibold text-white">
-              {(score * 100).toFixed(0)}%
-            </span>
+      <div className="flex-1">
+        <div className="font-semibold text-sm text-white">{title}</div>
+        <div className="text-xs text-slate-300 mt-0.5">{detail}</div>
+        {impact < 0 && (
+          <div className="text-xs text-emerald-400 font-semibold mt-1">
+            Expected CSI reduction: {Math.abs(Math.round(impact))} points
           </div>
+        )}
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-[10px] text-slate-400">Priority:</span>
+          <div className="flex-1 bg-slate-700 rounded-full h-1.5">
+            <div
+              className="bg-slate-400 h-1.5 rounded-full"
+              style={{ width: `${score * 100}%` }}
+            ></div>
+          </div>
+          <span className="text-xs font-semibold text-white">
+            {(score * 100).toFixed(0)}%
+          </span>
         </div>
       </div>
     </div>

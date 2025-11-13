@@ -35,7 +35,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
               onChange={() => onToggle("trees")}
               className="w-3.5 h-3.5 rounded border-slate-300 text-green-600 focus:ring-green-500"
             />
-            <span className="text-xs font-medium text-slate-700">🌳 Trees</span>
+            <span className="text-xs font-medium text-slate-700">Trees</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
@@ -46,7 +46,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
               className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
             />
             <span className="text-xs font-medium text-slate-700">
-              🌱 Planting
+              Planting
             </span>
           </label>
 
@@ -58,7 +58,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
               className="w-3.5 h-3.5 rounded border-slate-300 text-red-600 focus:ring-red-500"
             />
             <span className="text-xs font-medium text-slate-700">
-              🔥 Hotspots
+              Hotspots
             </span>
           </label>
         </div>
