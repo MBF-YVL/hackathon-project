@@ -158,7 +158,6 @@ export default function Home() {
       {isLoading ? (
         <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
           <div className="text-center">
-            <div className="text-6xl mb-4">🌆</div>
             <div className="text-2xl font-semibold mb-2">Loading CityPulse Montréal 2035</div>
             <div className="text-slate-400">Preparing urban stress digital twin...</div>
           </div>
@@ -166,7 +165,6 @@ export default function Home() {
       ) : error ? (
         <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
           <div className="text-center max-w-md">
-            <div className="text-6xl mb-4">⚠️</div>
             <div className="text-xl font-semibold mb-2 text-red-400">Error Loading Data</div>
             <div className="text-slate-300 mb-4">{error}</div>
             <button
