@@ -7,7 +7,7 @@ export const CSI_COLOR_SCALE = [
   [20, [100, 180, 100]], // 20-40: Muted light green
   [40, [220, 200, 70]], // 40-60: Muted yellow (moderate stress)
   [60, [255, 140, 0]], // 60-70: Bright orange (more orange!)
-  [70, [255, 50, 0]], // 70-80: Red-orange 
+  [70, [255, 50, 0]], // 70-80: Red-orange
   [80, [220, 0, 0]], // 80-90: Bright red (more red!)
   [90, [180, 0, 0]], // 90-100: Dark red (CRITICAL!)
 ];

@@ -94,7 +94,10 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
         {cell.summary && (
           <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
             <div className="text-xs text-cyan-900 font-semibold mb-2 flex items-center gap-2">
-              <span>🤖 AI Analysis</span>
+              <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>AI Analysis</span>
               <span className="text-[10px] bg-cyan-200 px-1.5 py-0.5 rounded uppercase">
                 {cell.summary.source}
               </span>
@@ -112,21 +115,21 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
           </h4>
           <div className="space-y-2">
             <InterventionCard
-              icon="🌳"
+              type="tree"
               title="Tree Planting"
               score={interventions.trees.score}
               detail={`${interventions.trees.recommended_count} trees recommended`}
               impact={interventions.trees.expected_delta_csi}
             />
             <InterventionCard
-              icon="🚗"
+              type="car"
               title="Car Access Limits"
               score={interventions.car_limits.score}
               detail={interventions.car_limits.type?.replace('_', ' ') || 'No intervention'}
               impact={interventions.car_limits.expected_delta_csi}
             />
             <InterventionCard
-              icon="🚇"
+              type="transit"
               title="Transit Improvements"
               score={interventions.transit.score}
               detail={interventions.transit.type?.replace('_', ' ') || 'No intervention'}
@@ -157,13 +160,13 @@ function StressBar({ label, value, color }: { label: string; value: number; colo
 }
 
 function InterventionCard({
-  icon,
+  type,
   title,
   score,
   detail,
   impact,
 }: {
-  icon: string;
+  type: 'tree' | 'car' | 'transit';
   title: string;
   score: number;
   detail: string;
@@ -174,23 +177,55 @@ function InterventionCard({
     score > 0.5 ? 'bg-yellow-50 border-yellow-200' :
     'bg-slate-50 border-slate-200';
 
+  const iconColor =
+    type === 'tree' ? 'text-green-600' :
+    type === 'car' ? 'text-red-600' :
+    'text-blue-600';
+
+  const getIcon = () => {
+    if (type === 'tree') {
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      );
+    } else if (type === 'car') {
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+      );
+    } else {
+      return (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      );
+    }
+  };
+
   return (
-    <div className={`p-3 rounded-lg border ${priorityColor}`}>
+    <div className={`p-3 rounded-lg border ${priorityColor} transition-all hover:shadow-md cursor-pointer`}>
       <div className="flex items-start gap-3">
-        <div className="text-2xl">{icon}</div>
+        <div className={iconColor}>{getIcon()}</div>
         <div className="flex-1">
           <div className="font-semibold text-sm text-slate-900">{title}</div>
           <div className="text-xs text-slate-600 mt-0.5">{detail}</div>
           {impact < 0 && (
-            <div className="text-xs text-green-600 font-semibold mt-1">
-              Expected CSI reduction: {Math.abs(Math.round(impact))} points
+            <div className="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              CSI reduction: {Math.abs(Math.round(impact))} points
             </div>
           )}
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-[10px] text-slate-500">Priority:</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wide">Priority</span>
             <div className="flex-1 bg-slate-200 rounded-full h-1.5">
               <div
-                className="bg-slate-700 h-1.5 rounded-full"
+                className={`h-1.5 rounded-full transition-all ${
+                  score > 0.7 ? 'bg-red-500' : score > 0.5 ? 'bg-yellow-500' : 'bg-slate-400'
+                }`}
                 style={{ width: `${score * 100}%` }}
               ></div>
             </div>
