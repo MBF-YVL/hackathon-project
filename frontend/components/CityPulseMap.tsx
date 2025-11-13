@@ -111,11 +111,12 @@ export default function CityPulseMap({
       // Only render trees at zoom level 12 or higher to improve performance
       if (viewState.zoom >= 12) {
         // Sample trees based on zoom level to reduce rendering load
-        const samplingRate = viewState.zoom >= 14 ? 1 : viewState.zoom >= 13 ? 0.5 : 0.25;
-        const sampledTrees = treesData.features.filter((_, idx) => 
-          Math.random() < samplingRate
+        const samplingRate =
+          viewState.zoom >= 14 ? 1 : viewState.zoom >= 13 ? 0.5 : 0.25;
+        const sampledTrees = treesData.features.filter(
+          (_, idx) => Math.random() < samplingRate
         );
-        
+
         layerList.push(
           new ScatterplotLayer({
             id: "trees",
@@ -165,7 +166,14 @@ export default function CityPulseMap({
     }
 
     return layerList;
-  }, [gridData, treesData, plantingSitesData, layersVisible, onCellClick, viewState.zoom]);
+  }, [
+    gridData,
+    treesData,
+    plantingSitesData,
+    layersVisible,
+    onCellClick,
+    viewState.zoom,
+  ]);
 
   if (!isClient) {
     return <div className="relative w-full h-full bg-gray-900" />;
