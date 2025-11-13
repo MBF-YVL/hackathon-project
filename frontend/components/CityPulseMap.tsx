@@ -65,9 +65,12 @@ export default function CityPulseMap({
   // Create deck.gl layers
   const layers = useMemo(() => {
     const layerList: any[] = [];
-    
+
     // Check if scenario is active
-    const isScenarioActive = scenarioParams.car !== 0 || scenarioParams.trees !== 0 || scenarioParams.transit !== 0;
+    const isScenarioActive =
+      scenarioParams.car !== 0 ||
+      scenarioParams.trees !== 0 ||
+      scenarioParams.transit !== 0;
 
     // CSI Grid Layer
     if (
@@ -89,7 +92,9 @@ export default function CityPulseMap({
           highlightColor: [255, 255, 255, 100],
           getFillColor: (d: any) => {
             // Use scenario CSI when sliders are active, otherwise current CSI
-            const csiValue = isScenarioActive ? d.properties.csi_scenario : d.properties.csi_current;
+            const csiValue = isScenarioActive
+              ? d.properties.csi_scenario
+              : d.properties.csi_current;
             const color = getCSIColor(csiValue);
             return [...color.slice(0, 3), 200];
           },

@@ -67,7 +67,7 @@ export default function ScenarioControls({
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 max-h-[calc(100vh-8rem)] overflow-y-auto">
           {/* Scenario Impact Summary */}
           {isScenarioActive && metrics && (
             <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 space-y-2">
@@ -192,13 +192,17 @@ export default function ScenarioControls({
 
           {/* Narrative Display */}
           {narrative && (
-            <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
-              <h4 className="text-xs font-semibold text-cyan-900 mb-2 uppercase tracking-wider">
-                AI Narrative
-              </h4>
-              <p className="text-sm text-cyan-900 leading-relaxed">
-                {narrative}
-              </p>
+            <div className="mt-4 border border-slate-200 rounded-lg overflow-hidden">
+              <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
+                <h4 className="text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+                  Prediction
+                </h4>
+              </div>
+              <div className="p-3 bg-white/50 max-h-48 overflow-y-auto">
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {narrative}
+                </p>
+              </div>
             </div>
           )}
 

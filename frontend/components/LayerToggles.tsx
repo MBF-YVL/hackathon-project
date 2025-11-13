@@ -25,9 +25,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
               onChange={() => onToggle("csi")}
               className="w-3.5 h-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
             />
-            <span className="text-xs font-medium text-slate-700">
-              CSI Grid
-            </span>
+            <span className="text-xs font-medium text-slate-700">CSI Grid</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
@@ -37,9 +35,7 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
               onChange={() => onToggle("trees")}
               className="w-3.5 h-3.5 rounded border-slate-300 text-green-600 focus:ring-green-500"
             />
-            <span className="text-xs font-medium text-slate-700">
-              🌳 Trees
-            </span>
+            <span className="text-xs font-medium text-slate-700">🌳 Trees</span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
@@ -86,7 +82,9 @@ export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
                   className="w-3 h-3 rounded"
                   style={{ backgroundColor: "rgb(220, 200, 70)" }}
                 ></div>
-                <span className="text-[11px] text-slate-600">40-70: Moderate</span>
+                <span className="text-[11px] text-slate-600">
+                  40-70: Moderate
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <div
