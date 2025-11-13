@@ -87,7 +87,7 @@ export default function Home() {
       setPlantingSitesData(sites);
     } catch (err) {
       console.error('Error loading data:', err);
-      setError('Failed to load data. Make sure the backend is running on http://localhost:5000');
+      setError('Failed to load data. Make sure the backend is running on http://localhost:5001');
     } finally {
       setIsLoading(false);
     }

@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Map from 'react-map-gl/maplibre';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
@@ -42,6 +42,11 @@ export default function CityPulseMap({
 }: CityPulseMapProps) {
   const [viewState, setViewState] = useState<ViewState>(INITIAL_VIEW_STATE);
   const [hoverInfo, setHoverInfo] = useState<any>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Create deck.gl layers
   const layers = useMemo(() => {
@@ -147,6 +152,10 @@ export default function CityPulseMap({
     return layerList;
   }, [gridData, treesData, plantingSitesData, layersVisible, onCellClick]);
 
+  if (!isClient) {
+    return <div className="relative w-full h-full bg-gray-900" />;
+  }
+
   return (
     <div className="relative w-full h-full">
       <DeckGL
@@ -154,6 +163,12 @@ export default function CityPulseMap({
         onViewStateChange={({ viewState }: any) => setViewState(viewState)}
         controller={true}
         layers={layers}
+        parameters={{
+          depthTest: false,
+          blend: true,
+          blendFunc: ['SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA', 'ONE', 'ONE_MINUS_SRC_ALPHA'],
+          blendEquation: 'FUNC_ADD',
+        }}
         getTooltip={({ object }: any) => {
           if (!object) return null;
           

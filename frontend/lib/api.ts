@@ -1,9 +1,14 @@
 /**
  * API client for CityPulse backend
  */
-import { GeoJSONFeatureCollection, Hotspot, CellDetails, ScenarioParams } from '@/types';
+import {
+  GeoJSONFeatureCollection,
+  Hotspot,
+  CellDetails,
+  ScenarioParams,
+} from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
 
 export class CityPulseAPI {
   private baseUrl: string;
@@ -15,14 +20,20 @@ export class CityPulseAPI {
   /**
    * Fetch grid data with optional scenario parameters
    */
-  async getGrid(scenario: 'current' | '2035' = 'current', params?: ScenarioParams): Promise<GeoJSONFeatureCollection> {
+  async getGrid(
+    scenario: "current" | "2035" = "current",
+    params?: ScenarioParams
+  ): Promise<GeoJSONFeatureCollection> {
     const url = new URL(`${this.baseUrl}/api/grid`);
-    url.searchParams.append('scenario', scenario);
-    
+    url.searchParams.append("scenario", scenario);
+
     if (params) {
-      if (params.car !== 0) url.searchParams.append('car', params.car.toString());
-      if (params.trees !== 0) url.searchParams.append('trees', params.trees.toString());
-      if (params.transit !== 0) url.searchParams.append('transit', params.transit.toString());
+      if (params.car !== 0)
+        url.searchParams.append("car", params.car.toString());
+      if (params.trees !== 0)
+        url.searchParams.append("trees", params.trees.toString());
+      if (params.transit !== 0)
+        url.searchParams.append("transit", params.transit.toString());
     }
 
     const response = await fetch(url.toString());
@@ -79,11 +90,14 @@ export class CityPulseAPI {
   /**
    * Generate scenario narrative
    */
-  async getScenarioSummary(params: ScenarioParams, metrics: any): Promise<{ narrative: string }> {
+  async getScenarioSummary(
+    params: ScenarioParams,
+    metrics: any
+  ): Promise<{ narrative: string }> {
     const response = await fetch(`${this.baseUrl}/api/scenario/summary`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         car: params.car,
@@ -92,9 +106,11 @@ export class CityPulseAPI {
         aggregate_metrics: metrics,
       }),
     });
-    
+
     if (!response.ok) {
-      throw new Error(`Failed to generate scenario summary: ${response.statusText}`);
+      throw new Error(
+        `Failed to generate scenario summary: ${response.statusText}`
+      );
     }
     return response.json();
   }
@@ -102,4 +118,3 @@ export class CityPulseAPI {
 
 // Export singleton instance
 export const api = new CityPulseAPI();
-
