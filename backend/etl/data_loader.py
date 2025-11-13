@@ -25,7 +25,9 @@ def load_air_quality_data():
         try:
             print(f"  ✓ Loading real air quality data from {filepath.name}")
             df = pd.read_csv(filepath)
-            # Expected columns: station_id, lat, lon, pollutant, concentration, date, etc.
+            # RSQA columns: NO_POSTE, DATE_HEURE, CO, NO2, PM2.5, PM10, O3, SO2, etc.
+            # Keep relevant pollutants and station info
+            print(f"    Loaded {len(df)} air quality measurements")
             return df
         except Exception as e:
             print(f"  ✗ Error loading air quality data: {e}")
@@ -62,7 +64,9 @@ def load_noise_data():
         try:
             print(f"  ✓ Loading real noise data from {filepath.name}")
             df = pd.read_csv(filepath)
-            # Expected columns: location_id, lat, lon, noise_level_db, date, etc.
+            # Columns: horodatage, latitude, longitude, LEQ, Lmin, Lmax, L10, L50, L90, etc.
+            # LEQ is the equivalent continuous sound level (main metric)
+            print(f"    Loaded {len(df)} noise measurements")
             return df
         except Exception as e:
             print(f"  ✗ Error loading noise data: {e}")
@@ -111,15 +115,14 @@ def load_trees_data():
         try:
             print(f"  ✓ Loading real trees data from {filepath.name}")
             df = pd.read_csv(filepath)
-            # Expected columns: tree_id, lat, lon, species, etc.
-            # Convert to GeoDataFrame if lat/lon columns exist
+            # Columns: Latitude, Longitude, Essence_fr, DHP, Date_Plantation, etc.
             if 'Latitude' in df.columns and 'Longitude' in df.columns:
-                geometry = [Point(xy) for xy in zip(df.Longitude, df.Latitude)]
+                # Filter out invalid coordinates
+                df = df.dropna(subset=['Latitude', 'Longitude'])
+                df = df[(df['Latitude'] != 0) & (df['Longitude'] != 0)]
+                geometry = [Point(lon, lat) for lon, lat in zip(df.Longitude, df.Latitude)]
                 gdf = gpd.GeoDataFrame(df, geometry=geometry, crs='EPSG:4326')
-                return gdf
-            elif 'lat' in df.columns and 'lon' in df.columns:
-                geometry = [Point(xy) for xy in zip(df.lon, df.lat)]
-                gdf = gpd.GeoDataFrame(df, geometry=geometry, crs='EPSG:4326')
+                print(f"    Loaded {len(gdf)} trees with valid coordinates")
                 return gdf
             return df
         except Exception as e:
@@ -133,14 +136,14 @@ def load_planting_sites_data():
         try:
             print(f"  ✓ Loading real planting sites from {filepath.name}")
             df = pd.read_csv(filepath)
-            # Convert to GeoDataFrame if lat/lon columns exist
+            # Columns: Latitude, Longitude, Statut, Etat_site, Type_emp, etc.
             if 'Latitude' in df.columns and 'Longitude' in df.columns:
-                geometry = [Point(xy) for xy in zip(df.Longitude, df.Latitude)]
+                # Filter out invalid coordinates
+                df = df.dropna(subset=['Latitude', 'Longitude'])
+                df = df[(df['Latitude'] != 0) & (df['Longitude'] != 0)]
+                geometry = [Point(lon, lat) for lon, lat in zip(df.Longitude, df.Latitude)]
                 gdf = gpd.GeoDataFrame(df, geometry=geometry, crs='EPSG:4326')
-                return gdf
-            elif 'lat' in df.columns and 'lon' in df.columns:
-                geometry = [Point(xy) for xy in zip(df.lon, df.lat)]
-                gdf = gpd.GeoDataFrame(df, geometry=geometry, crs='EPSG:4326')
+                print(f"    Loaded {len(gdf)} planting sites with valid coordinates")
                 return gdf
             return df
         except Exception as e:
@@ -171,16 +174,28 @@ def load_canopy_data():
     return None
 
 def load_vulnerability_data():
-    """Load vulnerability data from unzipped folder or return None"""
+    """Load vulnerability data from GeoJSON file or return None"""
+    # Check for direct GeoJSON file first
+    filepath = DATA_RAW / 'vulnerability.geojson'
+    if filepath.exists():
+        try:
+            print(f"  ✓ Loading real vulnerability data from {filepath.name}")
+            gdf = gpd.read_file(filepath)
+            print(f"    Loaded {len(gdf)} vulnerability zones")
+            return gdf
+        except Exception as e:
+            print(f"  ✗ Error loading vulnerability: {e}")
+    
+    # Check for unzipped folder
     vuln_dir = DATA_RAW / 'vulnerability'
     if vuln_dir.exists():
-        # Look for shapefiles or GeoJSON in the directory
         for ext in ['.geojson', '.shp', '.gpkg']:
             files = list(vuln_dir.glob(f'*{ext}'))
             if files:
                 try:
                     print(f"  ✓ Loading real vulnerability data from {files[0].name}")
                     gdf = gpd.read_file(files[0])
+                    print(f"    Loaded {len(gdf)} vulnerability zones")
                     return gdf
                 except Exception as e:
                     print(f"  ✗ Error loading vulnerability: {e}")
@@ -192,19 +207,36 @@ def fetch_entraves_realtime():
     """Fetch real-time traffic closures (entraves) from live API"""
     import requests
     
-    # Try Données Québec JSON feed
-    url = "https://www.donneesquebec.ca/recherche/api/3/action/datastore_search?resource_id=e29e86f0-faed-4b5a-b28d-7f953c59b1ff&limit=1000"
+    # Try direct Montréal Open Data API
+    # Alternative URL from Montreal's open data portal
+    urls_to_try = [
+        "https://donnees.montreal.ca/api/3/action/datastore_search?resource_id=a2bc8014-488c-495d-941b-e7ae1999d1bd&limit=1000",
+        "https://donnees.montreal.ca/dataset/5b9a9a89-8c83-4e7b-a421-89b6f39f1ab3/resource/a2bc8014-488c-495d-941b-e7ae1999d1bd/download/entraves.json"
+    ]
     
-    try:
-        print("  → Fetching live entraves data...")
-        response = requests.get(url, timeout=10)
-        if response.ok:
-            data = response.json()
-            print(f"  ✓ Fetched {len(data.get('result', {}).get('records', []))} active entraves")
-            return data.get('result', {}).get('records', [])
-    except Exception as e:
-        print(f"  ✗ Error fetching entraves: {e}")
+    for url in urls_to_try:
+        try:
+            print(f"  → Fetching live entraves data from {url[:50]}...")
+            response = requests.get(url, timeout=10)
+            if response.ok:
+                data = response.json()
+                
+                # Handle different response formats
+                if 'result' in data and 'records' in data['result']:
+                    records = data['result']['records']
+                elif isinstance(data, list):
+                    records = data
+                else:
+                    records = []
+                
+                if records:
+                    print(f"  ✓ Fetched {len(records)} active entraves")
+                    return records
+        except Exception as e:
+            print(f"  ✗ Error with this URL: {e}")
+            continue
     
+    print("  ⚠ Could not fetch live entraves data (not critical)")
     return None
 
 def check_data_availability():

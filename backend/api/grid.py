@@ -1,7 +1,4 @@
-"""
-Grid API endpoints
-Handles requests for CSI grid data
-"""
+"""Grid API endpoints - Handles requests for CSI grid data"""
 import json
 import os
 from flask import Blueprint, request, jsonify, current_app
@@ -9,7 +6,6 @@ import geopandas as gpd
 
 bp = Blueprint('grid', __name__, url_prefix='/api')
 
-# Cache for grid data
 _grid_cache = None
 
 def load_grid_data():
@@ -20,20 +16,12 @@ def load_grid_data():
         if os.path.exists(grid_file):
             _grid_cache = gpd.read_file(grid_file)
         else:
-            # Return empty GeoJSON if file doesn't exist yet
             return {"type": "FeatureCollection", "features": []}
     return _grid_cache
 
 @bp.route('/grid', methods=['GET'])
 def get_grid():
-    """
-    Get grid data with CSI metrics
-    Query params:
-      - scenario: 'current' or '2035'
-      - car: car dependence adjustment (-1.0 to 0.0)
-      - trees: tree investment (0.0 to 1.0)
-      - transit: transit investment (0.0 to 1.0)
-    """
+    """Get grid data with CSI metrics and optional scenario adjustments"""
     try:
         scenario = request.args.get('scenario', 'current')
         car = float(request.args.get('car', 0.0))
@@ -43,15 +31,12 @@ def get_grid():
         grid_data = load_grid_data()
         
         if isinstance(grid_data, dict):
-            # Empty grid
             return jsonify(grid_data)
         
-        # Apply scenario adjustments if needed
         if scenario == '2035' or car != 0 or trees != 0 or transit != 0:
             from scenario_engine import apply_scenario_adjustments
             grid_data = apply_scenario_adjustments(grid_data.copy(), car, trees, transit)
         
-        # Convert to GeoJSON
         geojson = json.loads(grid_data.to_json())
         return jsonify(geojson)
     

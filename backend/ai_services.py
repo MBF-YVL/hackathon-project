@@ -1,14 +1,10 @@
-"""
-AI Services for CityPulse Montréal 2035
-Integrates Groq and Gemini APIs for text generation
-"""
+"""AI Services - Integrates Groq and Gemini APIs for text generation"""
 import os
 from typing import Dict, Any
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Cache for cell summaries
 _cell_summary_cache = {}
 _scenario_narrative_cache = {}
 

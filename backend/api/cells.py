@@ -1,7 +1,4 @@
-"""
-Cell API endpoints
-Handles requests for individual cell details
-"""
+"""Cell API endpoints - Handles requests for individual cell details"""
 from flask import Blueprint, jsonify, current_app
 import json
 import os
@@ -10,10 +7,7 @@ bp = Blueprint('cells', __name__, url_prefix='/api')
 
 @bp.route('/cell/<cell_id>', methods=['GET'])
 def get_cell(cell_id):
-    """
-    Get detailed information for a specific cell
-    Includes metrics, interventions, and AI-generated summary
-    """
+    """Get detailed information for a specific cell including AI-generated summary"""
     try:
         from api.grid import load_grid_data
         from ai_services import generate_cell_summary
@@ -77,9 +71,7 @@ def get_cell(cell_id):
 
 @bp.route('/hotspots', methods=['GET'])
 def get_hotspots():
-    """
-    Get identified stress hotspots
-    """
+    """Get identified stress hotspots (CSI > 70)"""
     try:
         from api.grid import load_grid_data
         import numpy as np
@@ -89,16 +81,12 @@ def get_hotspots():
         if isinstance(grid_data, dict):
             return jsonify([])
         
-        # Define hotspot threshold
         threshold = 70
-        
-        # Filter high CSI cells
         hotspot_cells = grid_data[grid_data['csi_current'] > threshold]
         
         if hotspot_cells.empty:
             return jsonify([])
         
-        # Group nearby cells into hotspots (simplified clustering)
         hotspots = []
         hotspot_id = 1
         

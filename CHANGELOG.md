@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added - 2025-01-XX
+### Added - 2025-01-13
+
+#### Git Repository
+
+- Initial commit (812b0f3): CityPulse Montréal 2035 hackathon prototype
+- 44 files committed with 14,111 insertions
+- Complete project structure with backend, frontend, and data directories
+
+### Added - 2025-01-13
 
 #### Project Structure
 
