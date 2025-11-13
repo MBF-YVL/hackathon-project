@@ -1,5 +1,5 @@
 """Cell API endpoints - Handles requests for individual cell details"""
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, request, current_app
 import json
 import os
 
@@ -12,10 +12,20 @@ def get_cell(cell_id):
         from api.grid import load_grid_data
         from ai_services import generate_cell_summary
         
+        # Get scenario parameters from query string
+        car = float(request.args.get('car', 0.0))
+        trees = float(request.args.get('trees', 0.0))
+        transit = float(request.args.get('transit', 0.0))
+        
         grid_data = load_grid_data()
         
         if isinstance(grid_data, dict):
             return jsonify({'error': 'Grid data not available'}), 404
+        
+        # Apply scenario adjustments if any parameters are set
+        if car != 0 or trees != 0 or transit != 0:
+            from scenario_engine import apply_scenario_adjustments
+            grid_data = apply_scenario_adjustments(grid_data.copy(), car, trees, transit)
         
         # Find the cell
         cell = grid_data[grid_data['id'] == cell_id]

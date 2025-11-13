@@ -55,10 +55,21 @@ export class CityPulseAPI {
   }
 
   /**
-   * Fetch cell details
+   * Fetch cell details with optional scenario parameters
    */
-  async getCell(cellId: string): Promise<CellDetails> {
-    const response = await fetch(`${this.baseUrl}/api/cell/${cellId}`);
+  async getCell(cellId: string, params?: ScenarioParams): Promise<CellDetails> {
+    const url = new URL(`${this.baseUrl}/api/cell/${cellId}`);
+    
+    if (params) {
+      if (params.car !== 0)
+        url.searchParams.append("car", params.car.toString());
+      if (params.trees !== 0)
+        url.searchParams.append("trees", params.trees.toString());
+      if (params.transit !== 0)
+        url.searchParams.append("transit", params.transit.toString());
+    }
+    
+    const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`Failed to fetch cell: ${response.statusText}`);
     }

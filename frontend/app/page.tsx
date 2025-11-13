@@ -105,12 +105,29 @@ export default function Home() {
 
   const handleCellClick = async (cellId: string) => {
     try {
-      const cellDetails = await api.getCell(cellId);
+      const cellDetails = await api.getCell(cellId, scenarioParams);
       setSelectedCell(cellDetails);
     } catch (err) {
       console.error('Error loading cell details:', err);
     }
   };
+
+  // Refresh selected cell when scenario params change
+  useEffect(() => {
+    const refreshSelectedCell = async () => {
+      if (selectedCell) {
+        try {
+          const cellDetails = await api.getCell(selectedCell.id, scenarioParams);
+          setSelectedCell(cellDetails);
+        } catch (err) {
+          console.error('Error refreshing cell details:', err);
+        }
+      }
+    };
+    
+    refreshSelectedCell();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenarioParams]);
 
   const handleLayerToggle = (layer: keyof LayerVisibility) => {
     setLayersVisible((prev) => ({
