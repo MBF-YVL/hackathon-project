@@ -4,11 +4,12 @@
  */
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Map from "react-map-gl/maplibre";
 import DeckGL from "@deck.gl/react";
 import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
-import { ViewState, GeoJSONFeatureCollection } from "@/types";
+import type { PickingInfo } from "@deck.gl/core";
+import { ViewState, GeoJSONFeatureCollection, GeoJSONFeature } from "@/types";
 import { getCSIColor } from "@/lib/colors";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -41,16 +42,23 @@ export default function CityPulseMap({
   onCellClick,
 }: CityPulseMapProps) {
   const [viewState, setViewState] = useState<ViewState>(INITIAL_VIEW_STATE);
-  const [hoverInfo, setHoverInfo] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const deckRef = useRef(null);
 
   useEffect(() => {
-    setIsClient(true);
+    // Use setTimeout to avoid synchronous setState in effect
+    const initTimer = setTimeout(() => setIsClient(true), 0);
+    const readyTimer = setTimeout(() => setIsReady(true), 300);
+    return () => {
+      clearTimeout(initTimer);
+      clearTimeout(readyTimer);
+    };
   }, []);
 
   // Create deck.gl layers
   const layers = useMemo(() => {
-    const layerList: any[] = [];
+    const layerList: (GeoJsonLayer | ScatterplotLayer)[] = [];
 
     // CSI Grid Layer
     if (
@@ -59,31 +67,26 @@ export default function CityPulseMap({
       gridData.features &&
       gridData.features.length > 0
     ) {
-      console.log(`Rendering ${gridData.features.length} grid cells`);
       layerList.push(
         new GeoJsonLayer({
           id: "csi-grid",
+          // @ts-expect-error - GeoJSON type compatibility with deck.gl
           data: gridData,
           pickable: true,
           stroked: true,
           filled: true,
           extruded: false,
           opacity: 0.8,
-          getFillColor: (d: any) => {
-            const color = getCSIColor(d.properties.csi_current);
-            return color;
-          },
+          // @ts-expect-error - Color type compatibility with deck.gl
+          getFillColor: (d: GeoJSONFeature) =>
+            getCSIColor(d.properties.csi_current),
           getLineColor: [255, 255, 255, 80],
           getLineWidth: 1,
           lineWidthMinPixels: 0.5,
-          onClick: (info: any) => {
+          onClick: (info: PickingInfo<GeoJSONFeature>) => {
             if (info.object) {
-              console.log("Cell clicked:", info.object.properties.id);
               onCellClick(info.object.properties.id);
             }
-          },
-          onHover: (info: any) => {
-            setHoverInfo(info.object ? info : null);
           },
           updateTriggers: {
             getFillColor: [gridData],
@@ -95,9 +98,9 @@ export default function CityPulseMap({
     // Hotspots Layer (highlight high CSI cells)
     if (layersVisible.hotspots && gridData) {
       const hotspotFeatures = {
-        type: "FeatureCollection",
+        type: "FeatureCollection" as const,
         features: gridData.features.filter(
-          (f: any) => f.properties.csi_current > 70
+          (f: GeoJSONFeature) => f.properties.csi_current > 60
         ),
       };
 
@@ -105,6 +108,7 @@ export default function CityPulseMap({
         layerList.push(
           new GeoJsonLayer({
             id: "hotspots",
+            // @ts-expect-error - GeoJSON type compatibility with deck.gl
             data: hotspotFeatures,
             pickable: false,
             stroked: true,
@@ -121,11 +125,11 @@ export default function CityPulseMap({
     if (layersVisible.trees && treesData && treesData.features.length > 0) {
       // Only render trees at zoom level 12 or higher to improve performance
       if (viewState.zoom >= 12) {
-        // Sample trees based on zoom level to reduce rendering load
+        // Sample trees based on zoom level to reduce rendering load (deterministic sampling)
         const samplingRate =
-          viewState.zoom >= 14 ? 1 : viewState.zoom >= 13 ? 0.5 : 0.25;
+          viewState.zoom >= 14 ? 1 : viewState.zoom >= 13 ? 2 : 4;
         const sampledTrees = treesData.features.filter(
-          (_, idx) => Math.random() < samplingRate
+          (_tree, idx) => idx % samplingRate === 0
         );
 
         layerList.push(
@@ -139,7 +143,7 @@ export default function CityPulseMap({
             radiusScale: 1,
             radiusMinPixels: 2,
             radiusMaxPixels: 4,
-            getPosition: (d: any) => d.geometry.coordinates,
+            getPosition: (d: GeoJSONFeature) => d.geometry.coordinates,
             getFillColor: [34, 139, 34, 150],
           })
         );
@@ -163,15 +167,10 @@ export default function CityPulseMap({
           radiusScale: 1,
           radiusMinPixels: 3,
           radiusMaxPixels: 6,
-          getPosition: (d: any) => d.geometry.coordinates,
+          getPosition: (d: GeoJSONFeature) => d.geometry.coordinates,
           getFillColor: [46, 204, 113, 200],
           getLineColor: [39, 174, 96, 255],
           getLineWidth: 1,
-          onHover: (info: any) => {
-            if (info.object) {
-              setHoverInfo(info);
-            }
-          },
         })
       );
     }
@@ -181,23 +180,40 @@ export default function CityPulseMap({
     gridData,
     treesData,
     plantingSitesData,
-    layersVisible,
+    layersVisible.csi,
+    layersVisible.trees,
+    layersVisible.planting,
+    layersVisible.hotspots,
     onCellClick,
     viewState.zoom,
   ]);
 
-  if (!isClient) {
-    return <div className="relative w-full h-full bg-gray-900" />;
+  if (!isClient || !isReady) {
+    return (
+      <div className="relative w-full h-full bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-sm">Initializing map...</div>
+      </div>
+    );
   }
 
   return (
     <div className="relative w-full h-full">
       <DeckGL
+        ref={deckRef}
         viewState={viewState}
-        onViewStateChange={({ viewState }: any) => setViewState(viewState)}
+        onViewStateChange={(params) =>
+          setViewState(params.viewState as ViewState)
+        }
         controller={true}
         layers={layers}
-        getTooltip={({ object }: any) => {
+        onWebGLInitialized={() => {
+          // WebGL initialized successfully
+        }}
+        onError={(error: Error) => {
+          console.error("DeckGL error:", error);
+        }}
+        getTooltip={(info: PickingInfo) => {
+          const { object } = info;
           if (!object) return null;
 
           if (object.properties) {
@@ -219,12 +235,17 @@ export default function CityPulseMap({
             };
           } else if (object.geometry?.coordinates) {
             // Planting site
+            const objectWithProps = object as {
+              properties?: { priority_score?: number };
+            };
+            const priorityScore =
+              objectWithProps.properties?.priority_score || 0;
             return {
               html: `
                 <div class="p-2">
                   <div class="font-semibold">🌱 Planting Site</div>
                   <div class="text-sm">Priority: ${(
-                    object.properties?.priority_score * 100 || 0
+                    priorityScore * 100
                   ).toFixed(0)}%</div>
                 </div>
               `,
@@ -238,10 +259,7 @@ export default function CityPulseMap({
           return null;
         }}
       >
-        <Map
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-          attributionControl={true}
-        />
+        <Map mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" />
       </DeckGL>
     </div>
   );

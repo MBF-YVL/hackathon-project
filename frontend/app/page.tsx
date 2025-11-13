@@ -75,20 +75,12 @@ export default function Home() {
       setIsLoading(true);
       setError('');
 
-      console.log('Loading data from backend...');
-
       // Load all data in parallel
       const [grid, trees, sites] = await Promise.all([
         api.getGrid(),
         api.getTrees(),
         api.getPlantingSites(),
       ]);
-
-      console.log('Data loaded:', {
-        gridCells: grid.features?.length || 0,
-        trees: trees.features?.length || 0,
-        sites: sites.features?.length || 0
-      });
 
       setGridData(grid);
       setTreesData(trees);

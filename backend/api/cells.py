@@ -81,7 +81,7 @@ def get_hotspots():
         if isinstance(grid_data, dict):
             return jsonify([])
         
-        threshold = 70
+        threshold = 60
         hotspot_cells = grid_data[grid_data['csi_current'] > threshold]
         
         if hotspot_cells.empty:

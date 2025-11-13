@@ -69,3 +69,11 @@ def get_planting_sites():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@bp.route('/reload', methods=['POST'])
+def reload_grid():
+    """Force reload of grid data from disk"""
+    global _grid_cache
+    _grid_cache = None
+    load_grid_data()
+    return jsonify({'message': 'Grid data reloaded successfully'})
+
