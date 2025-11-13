@@ -245,11 +245,49 @@ def compute_noise_stress_from_real_data(grid_gdf):
     
     return grid_gdf
 
-def compute_traffic_stress_simple(grid_gdf):
-    """Compute simplified traffic stress"""
-    print("Computing traffic stress (simplified)...")
+def compute_traffic_stress_from_real_data(grid_gdf):
+    """Compute traffic stress from real traffic segments data"""
+    print("Computing traffic stress from real data...")
     
-    # Use distance to center as proxy
+    traffic_data = load_traffic_segments_data()
+    
+    if traffic_data is not None and not traffic_data.empty:
+        try:
+            # Check if it's a GeoDataFrame with geometry
+            if isinstance(traffic_data, gpd.GeoDataFrame) and 'geometry' in traffic_data.columns:
+                print(f"    Processing {len(traffic_data)} traffic segments...")
+                
+                # Ensure same CRS
+                if traffic_data.crs != grid_gdf.crs:
+                    traffic_data = traffic_data.to_crs(grid_gdf.crs)
+                
+                # Spatial join: count traffic segments intersecting each cell
+                joined = gpd.sjoin(grid_gdf[['id', 'geometry']], traffic_data, how='left', predicate='intersects')
+                
+                # Count segments per cell
+                segment_counts = joined.groupby('id').size()
+                
+                # Normalize to 0-1 range
+                max_segments = segment_counts.max() if len(segment_counts) > 0 else 1
+                
+                grid_gdf['traffic_stress'] = 0.3  # Base level
+                
+                for idx, row in grid_gdf.iterrows():
+                    cell_id = row['id']
+                    if cell_id in segment_counts.index:
+                        # More segments = higher stress
+                        segment_stress = min(1.0, segment_counts[cell_id] / max(max_segments * 0.3, 1))
+                        grid_gdf.at[idx, 'traffic_stress'] = 0.3 + (0.7 * segment_stress)
+                
+                print(f"    ✓ Computed traffic stress from real segments")
+                return grid_gdf
+            else:
+                print("    Traffic data has no geometry, using fallback")
+        except Exception as e:
+            print(f"    Error processing traffic segments: {e}, using fallback")
+    
+    # Fallback to distance-based estimation
+    print("    Using distance-based fallback for traffic")
     montreal_center = Point(-73.567256, 45.508888)
     if 'dist_to_center' not in grid_gdf.columns:
         grid_gdf['dist_to_center'] = grid_gdf.geometry.centroid.distance(montreal_center)
@@ -352,7 +390,7 @@ def main():
     grid = compute_air_stress_from_real_data(grid)
     grid = compute_heat_stress_from_real_data(grid)
     grid = compute_noise_stress_from_real_data(grid)
-    grid = compute_traffic_stress_simple(grid)
+    grid = compute_traffic_stress_from_real_data(grid)
     grid = compute_crowding_stress_simple(grid)
     grid = compute_vulnerability_from_real_data(grid)
     grid = compute_csi(grid)

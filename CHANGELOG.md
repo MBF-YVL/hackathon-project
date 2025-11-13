@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2025-01-13
+
+#### API Keys and AI Integration
+- Added API keys for Groq and Google Gemini to `.env` file
+- Fixed Groq model from deprecated `mixtral-8x7b-32768` to `llama-3.3-70b-versatile`
+- Fixed Gemini API key environment variable name to support both `GEMINI_API_KEY` and `GOOGLE_GEMINI_API_KEY`
+- ✅ AI-powered cell summaries now working with Groq
+- ✅ Scenario narratives ready with Gemini integration
+
+#### Traffic Data Processing
+- Fixed traffic segments CSV loader to handle European decimal format (commas instead of dots)
+- Implemented LineString geometry creation from source/destination coordinates
+- Updated traffic stress computation to use real traffic segment spatial data
+- ✅ Traffic stress now computed from 330 real traffic segments instead of distance-based fallback
+
+#### Frontend Performance
+- Added zoom-based rendering for trees layer (only shows at zoom >= 12)
+- Implemented sampling rate based on zoom level to reduce rendering load
+  - Zoom 12-13: 25% of trees
+  - Zoom 13-14: 50% of trees
+  - Zoom 14+: 100% of trees
+- Fixed error message to show correct backend port (5001)
+
+#### Data Quality
+- CSI values now more realistic (mean: 41.3, range: 33.5-65.1)
+- All 21,574 grid cells processed with real Montreal data
+- No hotspots (CSI > 70) in current scenario - indicates good baseline
+
 ### Added - 2025-01-13
 
 #### Data Processing Complete

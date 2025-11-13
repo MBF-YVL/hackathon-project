@@ -81,8 +81,37 @@ def load_traffic_segments_data():
         try:
             print(f"  ✓ Loading real traffic segments from {csv_path.name}")
             df = pd.read_csv(csv_path)
-            print(f"    Loaded {len(df)} traffic segments")
-            return df
+            
+            # Check for coordinate columns and convert comma decimals to dots
+            coord_cols = ['SrcLatitude', 'SrcLongitude', 'DestLatitude', 'DestLongitude']
+            has_coords = all(col in df.columns for col in coord_cols)
+            
+            if has_coords:
+                # Convert comma-separated decimals to dots (European format)
+                for col in coord_cols:
+                    if df[col].dtype == 'object':
+                        df[col] = df[col].str.replace(',', '.').astype(float)
+                
+                # Create LineString geometries from source to destination
+                from shapely.geometry import LineString
+                geometries = []
+                for _, row in df.iterrows():
+                    try:
+                        line = LineString([
+                            (row['SrcLongitude'], row['SrcLatitude']),
+                            (row['DestLongitude'], row['DestLatitude'])
+                        ])
+                        geometries.append(line)
+                    except:
+                        geometries.append(None)
+                
+                gdf = gpd.GeoDataFrame(df, geometry=geometries, crs='EPSG:4326')
+                gdf = gdf[gdf.geometry.notna()]  # Remove invalid geometries
+                print(f"    Loaded {len(gdf)} traffic segments with geometries")
+                return gdf
+            else:
+                print(f"    Loaded {len(df)} traffic segments (no geometry)")
+                return df
         except Exception as e:
             print(f"  ✗ Error loading traffic segments CSV: {e}")
     

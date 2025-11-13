@@ -2,15 +2,15 @@
  * CityPulseMap component
  * Main map with MapLibre and deck.gl integration
  */
-'use client';
+"use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import Map from 'react-map-gl/maplibre';
-import DeckGL from '@deck.gl/react';
-import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
-import { ViewState, GeoJSONFeatureCollection } from '@/types';
-import { getCSIColor } from '@/lib/colors';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React, { useState, useMemo, useEffect } from "react";
+import Map from "react-map-gl/maplibre";
+import DeckGL from "@deck.gl/react";
+import { GeoJsonLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { ViewState, GeoJSONFeatureCollection } from "@/types";
+import { getCSIColor } from "@/lib/colors";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface CityPulseMapProps {
   gridData: GeoJSONFeatureCollection | null;
@@ -56,7 +56,7 @@ export default function CityPulseMap({
     if (layersVisible.csi && gridData) {
       layerList.push(
         new GeoJsonLayer({
-          id: 'csi-grid',
+          id: "csi-grid",
           data: gridData,
           pickable: true,
           stroked: true,
@@ -84,14 +84,16 @@ export default function CityPulseMap({
     // Hotspots Layer (highlight high CSI cells)
     if (layersVisible.hotspots && gridData) {
       const hotspotFeatures = {
-        type: 'FeatureCollection',
-        features: gridData.features.filter((f: any) => f.properties.csi_current > 70),
+        type: "FeatureCollection",
+        features: gridData.features.filter(
+          (f: any) => f.properties.csi_current > 70
+        ),
       };
 
       if (hotspotFeatures.features.length > 0) {
         layerList.push(
           new GeoJsonLayer({
-            id: 'hotspots',
+            id: "hotspots",
             data: hotspotFeatures,
             pickable: false,
             stroked: true,
@@ -104,30 +106,43 @@ export default function CityPulseMap({
       }
     }
 
-    // Trees Layer
+    // Trees Layer - only show when zoomed in enough
     if (layersVisible.trees && treesData && treesData.features.length > 0) {
-      layerList.push(
-        new ScatterplotLayer({
-          id: 'trees',
-          data: treesData.features,
-          pickable: false,
-          opacity: 0.6,
-          stroked: false,
-          filled: true,
-          radiusScale: 1,
-          radiusMinPixels: 2,
-          radiusMaxPixels: 4,
-          getPosition: (d: any) => d.geometry.coordinates,
-          getFillColor: [34, 139, 34, 150],
-        })
-      );
+      // Only render trees at zoom level 12 or higher to improve performance
+      if (viewState.zoom >= 12) {
+        // Sample trees based on zoom level to reduce rendering load
+        const samplingRate = viewState.zoom >= 14 ? 1 : viewState.zoom >= 13 ? 0.5 : 0.25;
+        const sampledTrees = treesData.features.filter((_, idx) => 
+          Math.random() < samplingRate
+        );
+        
+        layerList.push(
+          new ScatterplotLayer({
+            id: "trees",
+            data: sampledTrees,
+            pickable: false,
+            opacity: 0.6,
+            stroked: false,
+            filled: true,
+            radiusScale: 1,
+            radiusMinPixels: 2,
+            radiusMaxPixels: 4,
+            getPosition: (d: any) => d.geometry.coordinates,
+            getFillColor: [34, 139, 34, 150],
+          })
+        );
+      }
     }
 
     // Planting Sites Layer
-    if (layersVisible.planting && plantingSitesData && plantingSitesData.features.length > 0) {
+    if (
+      layersVisible.planting &&
+      plantingSitesData &&
+      plantingSitesData.features.length > 0
+    ) {
       layerList.push(
         new ScatterplotLayer({
-          id: 'planting-sites',
+          id: "planting-sites",
           data: plantingSitesData.features,
           pickable: true,
           opacity: 0.8,
@@ -150,7 +165,7 @@ export default function CityPulseMap({
     }
 
     return layerList;
-  }, [gridData, treesData, plantingSitesData, layersVisible, onCellClick]);
+  }, [gridData, treesData, plantingSitesData, layersVisible, onCellClick, viewState.zoom]);
 
   if (!isClient) {
     return <div className="relative w-full h-full bg-gray-900" />;
@@ -166,25 +181,32 @@ export default function CityPulseMap({
         parameters={{
           depthTest: false,
           blend: true,
-          blendFunc: ['SRC_ALPHA', 'ONE_MINUS_SRC_ALPHA', 'ONE', 'ONE_MINUS_SRC_ALPHA'],
-          blendEquation: 'FUNC_ADD',
+          blendFunc: [
+            "SRC_ALPHA",
+            "ONE_MINUS_SRC_ALPHA",
+            "ONE",
+            "ONE_MINUS_SRC_ALPHA",
+          ],
+          blendEquation: "FUNC_ADD",
         }}
         getTooltip={({ object }: any) => {
           if (!object) return null;
-          
+
           if (object.properties) {
             // Grid cell
             return {
               html: `
                 <div class="p-2">
                   <div class="font-semibold">Cell ${object.properties.id}</div>
-                  <div class="text-sm">CSI: ${Math.round(object.properties.csi_current)}</div>
+                  <div class="text-sm">CSI: ${Math.round(
+                    object.properties.csi_current
+                  )}</div>
                 </div>
               `,
               style: {
-                backgroundColor: 'white',
-                borderRadius: '4px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                backgroundColor: "white",
+                borderRadius: "4px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
               },
             };
           } else if (object.geometry?.coordinates) {
@@ -193,13 +215,15 @@ export default function CityPulseMap({
               html: `
                 <div class="p-2">
                   <div class="font-semibold">🌱 Planting Site</div>
-                  <div class="text-sm">Priority: ${(object.properties?.priority_score * 100 || 0).toFixed(0)}%</div>
+                  <div class="text-sm">Priority: ${(
+                    object.properties?.priority_score * 100 || 0
+                  ).toFixed(0)}%</div>
                 </div>
               `,
               style: {
-                backgroundColor: 'white',
-                borderRadius: '4px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                backgroundColor: "white",
+                borderRadius: "4px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
               },
             };
           }
@@ -214,4 +238,3 @@ export default function CityPulseMap({
     </div>
   );
 }
-

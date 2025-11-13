@@ -59,7 +59,7 @@ Top intervention: {top_intervention[0]} (score {top_intervention[1]['score']:.2f
 Provide a 2-3 sentence explanation of why this cell is stressed and how the intervention could help."""
         
         response = client.chat.completions.create(
-            model="mixtral-8x7b-32768",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a concise city planning assistant."},
                 {"role": "user", "content": prompt}
@@ -108,7 +108,7 @@ def generate_scenario_narrative(car: float, transit: float, trees: float, metric
     try:
         import google.generativeai as genai
         
-        api_key = os.getenv('GOOGLE_GEMINI_API_KEY')
+        api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_GEMINI_API_KEY')
         if not api_key:
             return generate_fallback_narrative(car, transit, trees, metrics)
         
