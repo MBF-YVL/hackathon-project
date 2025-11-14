@@ -133,15 +133,14 @@ def create_grid():
             
             if cell.intersects(boundary):
                 clipped_cell = cell.intersection(boundary)
-                # Only include cells with significant overlap (>30% of original cell area)
-                # This ensures we don't include tiny edge fragments
+               
                 if not clipped_cell.is_empty and clipped_cell.area > 0:
                     original_area = cell.area
                     clipped_area = clipped_cell.area
                     if clipped_area / original_area > 0.3:
                         cells.append({
                             'id': f'cell_{cell_id}',
-                            'geometry': cell  # Use original square cell for consistency
+                            'geometry': cell  
                         })
                         cell_id += 1
             
