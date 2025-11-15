@@ -46,47 +46,71 @@ def compute_air_stress_from_real_data(grid_gdf):
                 if col in air_data.columns:
                     air_data[col] = pd.to_numeric(air_data[col], errors='coerce')
             
-            # Group by station and compute average
+            # Group by station and compute average (annual mean for WHO comparison)
             station_avg = air_data.groupby('NO_POSTE').agg({
                 'PM2.5': 'mean',
                 'NO2': 'mean',
                 'O3': 'mean'
             }).reset_index()
             
-            # Map station numbers to approximate Montreal locations
-            # Stations 1-4 are at different locations across Montreal
+            # Map all 11 RSQA station numbers to approximate Montreal locations
+            # Stations are distributed across Montreal Island and surrounding areas
+            # Coordinates estimated based on typical RSQA network distribution
             station_locations = {
-                1: (-73.65, 45.52),   # Est
-                2: (-73.58, 45.50),   # Centre
-                3: (-73.62, 45.54),   # Nord
-                4: (-73.56, 45.48)    # Sud
+                3: (-73.62, 45.54),   # Nord (Ahuntsic)
+                6: (-73.58, 45.50),   # Centre-ville
+                17: (-73.65, 45.52),  # Est (Hochelaga)
+                28: (-73.56, 45.48),  # Sud (Verdun)
+                31: (-73.60, 45.51),  # Centre-Est
+                50: (-73.70, 45.55),  # Nord-Ouest
+                55: (-73.54, 45.49),  # Centre-Sud
+                66: (-73.68, 45.53),  # Nord-Est
+                80: (-73.64, 45.50),  # Centre-Sud-Est
+                99: (-73.72, 45.57),  # Nord-Ouest
+                103: (-73.59, 45.52)  # Centre-Nord
             }
             
-            # Compute stress for each grid cell based on interpolation from stations
+            # WHO Air Quality Guidelines (2021):
+            # PM2.5 annual mean: 5 µg/m³ (interim target 1), 15 µg/m³ (interim target 4)
+            # NO2 annual mean: 10 µg/m³ (interim target), 40 µg/m³ (interim target 2)
+            WHO_PM25_TARGET = 5.0   # µg/m³ (strictest guideline)
+            WHO_NO2_TARGET = 10.0    # µg/m³ (strictest guideline)
+            WHO_PM25_MAX = 15.0      # µg/m³ (interim target 4)
+            WHO_NO2_MAX = 40.0       # µg/m³ (interim target 2)
+            
+            # Compute stress for each grid cell based on interpolation from all stations
             centroids = grid_gdf.geometry.centroid
             grid_stress = []
             
             for idx, centroid in enumerate(centroids):
-                # Simple inverse distance weighting from stations
+                # Inverse distance weighting from all available stations
                 total_stress = 0
                 total_weight = 0
                 
-                for station_id, (lon, lat) in station_locations.items():
+                for station_id in station_avg['NO_POSTE'].unique():
                     station_data = station_avg[station_avg['NO_POSTE'] == station_id]
-                    if not station_data.empty:
-                        # Distance to station
+                    if not station_data.empty and station_id in station_locations:
+                        lon, lat = station_locations[station_id]
+                        
+                        # Distance to station (in degrees, approximate)
                         dist = ((centroid.x - lon)**2 + (centroid.y - lat)**2)**0.5
                         if dist < 0.001:  # Very close
                             dist = 0.001
                         weight = 1 / (dist ** 2)
                         
-                        # Compute stress from pollutants (normalized)
+                        # Get pollutant values
                         pm25 = station_data['PM2.5'].iloc[0] if not pd.isna(station_data['PM2.5'].iloc[0]) else 0
                         no2 = station_data['NO2'].iloc[0] if not pd.isna(station_data['NO2'].iloc[0]) else 0
                         
-                        # Normalize: PM2.5 >12 is high stress, NO2 >20 is high stress
-                        # Scale so typical urban values (8-15) map to 0.5-0.9
-                        stress = min(1.0, (pm25 / 12 * 0.6 + no2 / 20 * 0.4))
+                        # Normalize using WHO guidelines:
+                        # Stress = 0 when at WHO target, stress = 1 when at WHO max
+                        # PM2.5: 0 at 5 µg/m³, 1 at 15 µg/m³
+                        # NO2: 0 at 10 µg/m³, 1 at 40 µg/m³
+                        pm25_stress = min(1.0, max(0.0, (pm25 - WHO_PM25_TARGET) / (WHO_PM25_MAX - WHO_PM25_TARGET))) if pm25 > 0 else 0
+                        no2_stress = min(1.0, max(0.0, (no2 - WHO_NO2_TARGET) / (WHO_NO2_MAX - WHO_NO2_TARGET))) if no2 > 0 else 0
+                        
+                        # Combined stress (weighted average: PM2.5 more harmful)
+                        stress = 0.6 * pm25_stress + 0.4 * no2_stress
                         
                         total_stress += stress * weight
                         total_weight += weight
@@ -97,7 +121,7 @@ def compute_air_stress_from_real_data(grid_gdf):
                     grid_stress.append(0.5)
             
             grid_gdf['air_stress'] = grid_stress
-            print(f"    Processed air quality from {len(station_avg)} stations")
+            print(f"    Processed air quality from {len(station_avg)} stations using WHO guidelines")
             return grid_gdf
             
         except Exception as e:
@@ -208,7 +232,6 @@ def compute_noise_stress_from_real_data(grid_gdf):
                 distances, indices = tree.query(centroids, k=min(3, len(noise_points)))
                 
                 grid_stress = []
-                np.random.seed(42)  # For reproducible variation
                 
                 for i, (dists, idxs) in enumerate(zip(distances, indices)):
                     if isinstance(dists, (int, float)):
@@ -293,7 +316,7 @@ def compute_traffic_stress_from_real_data(grid_gdf):
                         segment_stress = min(1.0, segment_counts[cell_id] / max(max_segments * 0.3, 1))
                         grid_gdf.at[idx, 'traffic_stress'] = 0.3 + (0.7 * segment_stress)
                 
-                print(f"    ✓ Computed traffic stress from real segments")
+                print(f"    [OK] Computed traffic stress from real segments")
                 return grid_gdf
             else:
                 print("    Traffic data has no geometry, using fallback")
@@ -327,7 +350,7 @@ def compute_crowding_stress_simple(grid_gdf):
     return grid_gdf
 
 def compute_vulnerability_from_real_data(grid_gdf):
-    """Compute vulnerability from real data"""
+    """Compute vulnerability from real data using actual vulnerability categories (optimized)"""
     print("Computing vulnerability from real data...")
     
     vuln_data = load_vulnerability_data()
@@ -335,31 +358,67 @@ def compute_vulnerability_from_real_data(grid_gdf):
     if vuln_data is not None and not vuln_data.empty:
         try:
             print(f"    Processing {len(vuln_data)} vulnerability zones...")
-            # Spatial join to assign vulnerability to cells
-            joined = gpd.sjoin(grid_gdf[['id', 'geometry']], vuln_data, how='left', predicate='intersects')
             
-            # Vulnerability index might be in different columns - adapt as needed
-            # For now, use a count-based approach
-            vuln_grouped = joined.groupby('id').size()
+            # Map vulnerability categories to numeric values
+            # Categories: 'Non significative', 'Mineure', 'Modérée', 'Élevée', 'Majeure'
+            vuln_category_map = {
+                'Non significative': 0.2,
+                'Mineure': 0.4,
+                'Modérée': 0.6,
+                'Élevée': 0.8,
+                'Majeure': 1.0
+            }
             
-            grid_gdf['vulnerability_factor'] = 0.5  # Default
+            # Fast approach: Sample vulnerability data and use spatial join with aggregation
+            print("    Sampling vulnerability data for performance...")
+            # Sample every 10th vulnerability zone for faster processing
+            sample_size = min(10000, len(vuln_data))
+            if len(vuln_data) > sample_size:
+                vuln_sample = vuln_data.sample(n=sample_size, random_state=42)
+            else:
+                vuln_sample = vuln_data
             
-            for idx, row in grid_gdf.iterrows():
-                cell_id = row['id']
-                if cell_id in vuln_grouped.index:
-                    # Normalize vulnerability
-                    vuln = min(1.0, 0.3 + vuln_grouped[cell_id] * 0.3)
-                    grid_gdf.at[idx, 'vulnerability_factor'] = vuln
+            print("    Performing spatial join...")
+            joined = gpd.sjoin(grid_gdf[['id', 'geometry']], vuln_sample, how='left', predicate='intersects')
             
-            print(f"    Computed vulnerability from real data")
+            # Initialize default vulnerability
+            grid_gdf['vulnerability_factor'] = 0.5
+            
+            # Fast aggregation: group by cell_id and get max vulnerability
+            print("    Computing vulnerability factors...")
+            vuln_by_cell = {}
+            
+            # Use groupby for faster processing
+            for cell_id, group in joined.groupby('id'):
+                max_vuln = 0.5
+                
+                # Check category columns
+                for col in ['ChaleurCat', 'PluiesCat', 'SechereCat', 'CruesCat', 'TempeteCat']:
+                    if col in group.columns:
+                        for cat in group[col].dropna().unique():
+                            if cat in vuln_category_map:
+                                max_vuln = max(max_vuln, vuln_category_map[cat])
+                
+                # Check class columns if no category found
+                if max_vuln == 0.5:
+                    for col in ['ChaleurCl', 'SecheresCl', 'TempeteCl', 'PluiesCl', 'CruesCl']:
+                        if col in group.columns:
+                            max_cl = pd.to_numeric(group[col], errors='coerce').max()
+                            if pd.notna(max_cl):
+                                max_vuln = max(max_vuln, 0.2 + (max_cl - 1) * 0.2)
+                
+                vuln_by_cell[cell_id] = max_vuln
+            
+            # Apply vulnerability factors (vectorized)
+            grid_gdf['vulnerability_factor'] = grid_gdf['id'].map(vuln_by_cell).fillna(0.5)
+            
+            print(f"    Computed vulnerability from actual categories")
             return grid_gdf
         except Exception as e:
             print(f"    Error processing vulnerability: {e}, using fallback")
     
-    # Fallback
-    np.random.seed(42)
-    grid_gdf['vulnerability_factor'] = np.random.beta(2, 5, len(grid_gdf))
-    grid_gdf['vulnerability_factor'] = 0.3 + 0.7 * grid_gdf['vulnerability_factor']
+    # Fallback: moderate vulnerability
+    grid_gdf['vulnerability_factor'] = 0.5
     
     return grid_gdf
 
@@ -383,30 +442,13 @@ def compute_csi(grid_gdf):
         weights['crowding'] * grid_gdf['crowding_stress']
     ) * 100
     
-    # Apply vulnerability as a moderate multiplier to spread values without extreme compression
-    # Scale base_csi (0-100) with vulnerability (0.6-1.0 range) to get better distribution
-    vulnerability_multiplier = 0.7 + 0.3 * grid_gdf['vulnerability_factor']  # Range: 0.7 to 1.0
+    # Apply vulnerability as a multiplier (vulnerability_factor range: 0.2-1.0)
+    # Higher vulnerability increases CSI (makes stress worse)
+    vulnerability_multiplier = 0.5 + 0.5 * grid_gdf['vulnerability_factor']  # Range: 0.6 to 1.0
     grid_gdf['csi_current'] = (base_csi * vulnerability_multiplier).clip(0, 100)
     grid_gdf['csi_scenario'] = grid_gdf['csi_current']
     
-    # Identify and adjust water/edge cells based on location
-    # St. Lawrence River is south of Montreal island (latitude < 45.42)
-    # Also identify far northern areas (latitude > 45.68) which are less populated
-    centroids = grid_gdf.geometry.centroid
-    grid_gdf['centroid_lat'] = centroids.y
-    
-    water_edge_mask = (
-        (grid_gdf['centroid_lat'] < 45.42) |  # Southern edge (river)
-        (grid_gdf['centroid_lat'] > 45.68)     # Northern edge (less populated)
-    )
-    
-    # Reduce CSI for water/edge cells to green range (25-35)
-    grid_gdf.loc[water_edge_mask, 'csi_current'] = grid_gdf.loc[water_edge_mask, 'csi_current'] * 0.65
-    grid_gdf.loc[water_edge_mask, 'csi_scenario'] = grid_gdf.loc[water_edge_mask, 'csi_scenario'] * 0.65
-    
-    # Clean up temporary column
-    grid_gdf = grid_gdf.drop(columns=['centroid_lat'])
-    
+    # No arbitrary adjustments - CSI is based purely on actual data and vulnerability
     return grid_gdf
 
 def main():
@@ -438,7 +480,7 @@ def main():
     
     output_file = PROCESSED_DIR / 'citypulse_grid.geojson'
     grid.to_file(output_file, driver='GeoJSON')
-    print(f"\n✓ Saved grid with real data to {output_file}")
+    print(f"\n[OK] Saved grid with real data to {output_file}")
     
     print("\n=== Summary Statistics ===")
     print(f"CSI: mean={grid['csi_current'].mean():.1f}, min={grid['csi_current'].min():.1f}, max={grid['csi_current'].max():.1f}")
@@ -447,7 +489,7 @@ def main():
     print(f"Heat stress: mean={grid['heat_stress'].mean():.2f}")
     print(f"Canopy: mean={grid['canopy'].mean():.2f}")
     
-    print("\n✓ Feature computation with real data complete!")
+    print("\n[OK] Feature computation with real data complete!")
 
 if __name__ == '__main__':
     main()

@@ -114,15 +114,14 @@ export default function CityPulseMap({
     }
 
     // Hotspots Layer (highlight high CSI cells)
+    const HOTSPOT_THRESHOLD = 60;
+
     if (layersVisible.hotspots && gridData) {
       // Use threshold of 60 to match backend, but highlight with red border
       const hotspotFeatures = {
         type: "FeatureCollection" as const,
         features: gridData.features.filter(
-          (f: GeoJSONFeature) => {
-            const csi = f.properties.csi_current || 0;
-            return csi > 60; // Match backend HOTSPOT_THRESHOLD
-          }
+          (f: GeoJSONFeature) => f.properties.csi_current > HOTSPOT_THRESHOLD
         ),
       };
 
@@ -178,10 +177,22 @@ export default function CityPulseMap({
       plantingSitesData &&
       plantingSitesData.features.length > 0
     ) {
+      const plantingSamplingRate =
+        viewState.zoom >= 14
+          ? 1
+          : viewState.zoom >= 13
+          ? 2
+          : viewState.zoom >= 12
+          ? 5
+          : 15;
+      const sampledPlanting = plantingSitesData.features.filter(
+        (_site, idx) => idx % plantingSamplingRate === 0
+      );
+
       layerList.push(
         new ScatterplotLayer({
           id: "planting-sites",
-          data: plantingSitesData.features,
+          data: sampledPlanting,
           pickable: true,
           opacity: 0.8,
           stroked: true,

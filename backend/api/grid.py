@@ -13,7 +13,7 @@ def load_grid_data():
     global _grid_cache
     if _grid_cache is None:
         grid_file = current_app.config['GRID_FILE']
-        
+        # Resolve relative paths from backend directory
         if not os.path.isabs(grid_file):
             from pathlib import Path
             backend_dir = Path(__file__).parent.parent
@@ -25,6 +25,7 @@ def load_grid_data():
                 print(f"Loaded grid: {len(_grid_cache)} cells from {grid_file}")
             except Exception as e:
                 print(f"Error loading grid with geopandas: {e}")
+                # Fallback for Windows when fiona/pyogrio not available
                 from shapely.geometry import shape
                 with open(grid_file, 'r', encoding='utf-8') as f:
                     geojson = json.load(f)
@@ -51,9 +52,11 @@ def get_grid():
         
         grid_data = load_grid_data()
         
+        # If load_grid_data returned empty dict, return it
         if isinstance(grid_data, dict):
             return jsonify(grid_data)
         
+        # If grid_data is None or empty GeoDataFrame, return empty
         if grid_data is None or (hasattr(grid_data, 'empty') and grid_data.empty):
             return jsonify({"type": "FeatureCollection", "features": []})
         
@@ -61,8 +64,10 @@ def get_grid():
             from scenario_engine import apply_scenario_adjustments
             grid_data = apply_scenario_adjustments(grid_data.copy(), car, trees, transit)
         
+        # Convert GeoDataFrame to GeoJSON
         geojson = json.loads(grid_data.to_json())
         
+        # Ensure it's a valid FeatureCollection
         if 'features' not in geojson or len(geojson['features']) == 0:
             print(f"Warning: GeoJSON has no features. Grid data type: {type(grid_data)}, length: {len(grid_data) if hasattr(grid_data, '__len__') else 'N/A'}")
         

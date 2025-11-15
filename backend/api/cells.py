@@ -65,7 +65,7 @@ def get_cell(cell_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-HOTSPOT_THRESHOLD = 60  # Match frontend threshold for consistency
+HOTSPOT_THRESHOLD = 60
 
 @bp.route('/hotspots', methods=['GET'])
 def get_hotspots():

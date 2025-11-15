@@ -21,7 +21,7 @@ def load_air_quality_data():
     filepath = DATA_RAW / 'air_quality.csv'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real air quality data from {filepath.name}")
+            print(f"  [OK] Loading real air quality data from {filepath.name}")
             df = pd.read_csv(filepath)
             # RSQA columns: NO_POSTE, DATE_HEURE, CO, NO2, PM2.5, PM10, O3, SO2, etc.
             # Keep relevant pollutants and station info
@@ -37,7 +37,7 @@ def load_heat_islands_data():
     filepath = DATA_RAW / 'heat_islands.geojson'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real heat islands data from {filepath.name}")
+            print(f"  [OK] Loading real heat islands data from {filepath.name}")
             gdf = gpd.read_file(filepath)
             return gdf
         except Exception as e:
@@ -47,7 +47,7 @@ def load_heat_islands_data():
     shp_path = DATA_RAW / 'heat_islands.shp'
     if shp_path.exists():
         try:
-            print(f"  ✓ Loading real heat islands data from {shp_path.name}")
+            print(f"  [OK] Loading real heat islands data from {shp_path.name}")
             gdf = gpd.read_file(shp_path)
             return gdf
         except Exception as e:
@@ -60,7 +60,7 @@ def load_noise_data():
     filepath = DATA_RAW / 'noise.csv'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real noise data from {filepath.name}")
+            print(f"  [OK] Loading real noise data from {filepath.name}")
             df = pd.read_csv(filepath)
             # Columns: horodatage, latitude, longitude, LEQ, Lmin, Lmax, L10, L50, L90, etc.
             # LEQ is the equivalent continuous sound level (main metric)
@@ -76,7 +76,7 @@ def load_traffic_segments_data():
     csv_path = DATA_RAW / 'traffic_segments.csv'
     if csv_path.exists():
         try:
-            print(f"  ✓ Loading real traffic segments from {csv_path.name}")
+            print(f"  [OK] Loading real traffic segments from {csv_path.name}")
             df = pd.read_csv(csv_path)
             
             # Check for coordinate columns and convert comma decimals to dots
@@ -116,7 +116,7 @@ def load_traffic_segments_data():
     filepath = DATA_RAW / 'traffic_segments.geojson'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real traffic segments from {filepath.name}")
+            print(f"  [OK] Loading real traffic segments from {filepath.name}")
             gdf = gpd.read_file(filepath)
             return gdf
         except Exception as e:
@@ -126,7 +126,7 @@ def load_traffic_segments_data():
     shp_path = DATA_RAW / 'traffic_segments.shp'
     if shp_path.exists():
         try:
-            print(f"  ✓ Loading real traffic segments from {shp_path.name}")
+            print(f"  [OK] Loading real traffic segments from {shp_path.name}")
             gdf = gpd.read_file(shp_path)
             return gdf
         except Exception as e:
@@ -139,7 +139,7 @@ def load_travel_times_data():
     filepath = DATA_RAW / 'travel_times.csv'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real travel times from {filepath.name}")
+            print(f"  [OK] Loading real travel times from {filepath.name}")
             df = pd.read_csv(filepath)
             # Expected columns: segment_id, travel_time, timestamp, etc.
             return df
@@ -152,7 +152,7 @@ def load_trees_data():
     filepath = DATA_RAW / 'trees.csv'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real trees data from {filepath.name}")
+            print(f"  [OK] Loading real trees data from {filepath.name}")
             df = pd.read_csv(filepath)
             # Columns: Latitude, Longitude, Essence_fr, DHP, Date_Plantation, etc.
             if 'Latitude' in df.columns and 'Longitude' in df.columns:
@@ -173,7 +173,7 @@ def load_planting_sites_data():
     filepath = DATA_RAW / 'planting_sites.csv'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real planting sites from {filepath.name}")
+            print(f"  [OK] Loading real planting sites from {filepath.name}")
             df = pd.read_csv(filepath)
             # Columns: Latitude, Longitude, Statut, Etat_site, Type_emp, etc.
             if 'Latitude' in df.columns and 'Longitude' in df.columns:
@@ -194,7 +194,7 @@ def load_canopy_data():
     filepath = DATA_RAW / 'canopy.geojson'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real canopy data from {filepath.name}")
+            print(f"  [OK] Loading real canopy data from {filepath.name}")
             gdf = gpd.read_file(filepath)
             return gdf
         except Exception as e:
@@ -204,7 +204,7 @@ def load_canopy_data():
     shp_path = DATA_RAW / 'canopy.shp'
     if shp_path.exists():
         try:
-            print(f"  ✓ Loading real canopy data from {shp_path.name}")
+            print(f"  [OK] Loading real canopy data from {shp_path.name}")
             gdf = gpd.read_file(shp_path)
             return gdf
         except Exception as e:
@@ -218,7 +218,7 @@ def load_vulnerability_data():
     filepath = DATA_RAW / 'vulnerability.geojson'
     if filepath.exists():
         try:
-            print(f"  ✓ Loading real vulnerability data from {filepath.name}")
+            print(f"  [OK] Loading real vulnerability data from {filepath.name}")
             gdf = gpd.read_file(filepath)
             print(f"    Loaded {len(gdf)} vulnerability zones")
             return gdf
@@ -232,7 +232,7 @@ def load_vulnerability_data():
             files = list(vuln_dir.glob(f'*{ext}'))
             if files:
                 try:
-                    print(f"  ✓ Loading real vulnerability data from {files[0].name}")
+                    print(f"  [OK] Loading real vulnerability data from {files[0].name}")
                     gdf = gpd.read_file(files[0])
                     print(f"    Loaded {len(gdf)} vulnerability zones")
                     return gdf
@@ -296,7 +296,7 @@ def check_data_availability():
     
     for name, filename in files_to_check.items():
         path = DATA_RAW / filename
-        status = "✓ FOUND" if path.exists() else "✗ MISSING (will use simulated data)"
+        status = "[OK] FOUND" if path.exists() else "[X] MISSING (will use simulated data)"
         print(f"{name:20s}: {status}")
     
     print("\nTo download real data, see: data/README.md")
