@@ -19,37 +19,37 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
   const interventions = cell.interventions;
 
   return (
-    <div className="absolute top-20 right-6 z-10 bg-slate-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-slate-700 w-96 max-h-[calc(100vh-7rem)] overflow-y-auto">
+    <div className="absolute top-20 right-6 z-10 glass-panel rounded-2xl shadow-2xl border border-cyan-500/30 w-96 max-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar">
       {/* Header */}
-      <div className="px-4 py-3 bg-slate-800 text-white border-b border-slate-700 rounded-t-lg flex items-center justify-between sticky top-0">
+      <div className="px-5 py-4 bg-cyan-500/10 text-cyan-400 border-b border-cyan-500/20 rounded-t-2xl flex items-center justify-between sticky top-0 backdrop-blur-md">
         <div>
-          <h3 className="font-semibold text-sm">Cell Details</h3>
-          <p className="text-[10px] text-slate-400">{cell.id}</p>
+          <h3 className="font-bold text-sm uppercase tracking-wider">Cell Details</h3>
+          <p className="text-xs text-cyan-300/60 mt-1">{cell.id}</p>
         </div>
         <button
           onClick={onClose}
-          className="text-white/80 hover:text-white text-xl font-bold w-7 h-7 flex items-center justify-center rounded hover:bg-white/10"
+          className="text-cyan-400 hover:text-cyan-300 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-lg hover:bg-cyan-500/20 transition-colors"
         >
           ×
         </button>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-4">
+      <div className="p-5 space-y-5">
         {/* CSI Score */}
-        <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
+        <div className="glass-panel p-6 rounded-xl border border-cyan-500/30">
           <div className="text-center">
-            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">
+            <div className="text-xs text-cyan-400/70 uppercase tracking-wider mb-2">
               City Stress Index
             </div>
-            <div className="text-4xl font-bold text-white">
+            <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-600">
               {Math.round(metrics.csi_current)}
             </div>
-            <div className="text-xs text-slate-400 mt-1">
+            <div className="text-xs text-gray-400 mt-2">
               out of 100
             </div>
             {metrics.csi_scenario !== metrics.csi_current && (
-              <div className="mt-2 text-sm">
+              <div className="mt-3 text-sm">
                 <span className="text-cyan-400 font-semibold">
                   → {Math.round(metrics.csi_scenario)} in 2035
                 </span>
@@ -60,31 +60,31 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
 
         {/* Stress Components */}
         <div>
-          <h4 className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+          <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">
             Stress Components
           </h4>
-          <div className="space-y-2">
-            <StressBar label="Air Quality" value={metrics.air_stress} color="bg-yellow-500" />
-            <StressBar label="Heat" value={metrics.heat_stress} color="bg-orange-500" />
-            <StressBar label="Noise" value={metrics.noise_stress} color="bg-blue-500" />
-            <StressBar label="Traffic" value={metrics.traffic_stress} color="bg-red-500" />
-            <StressBar label="Transit Crowding" value={metrics.crowding_stress} color="bg-cyan-500" />
+          <div className="space-y-3">
+            <StressBar label="Air Quality" value={metrics.air_stress} color="from-yellow-500 to-yellow-400" />
+            <StressBar label="Heat" value={metrics.heat_stress} color="from-orange-500 to-orange-400" />
+            <StressBar label="Noise" value={metrics.noise_stress} color="from-blue-500 to-blue-400" />
+            <StressBar label="Traffic" value={metrics.traffic_stress} color="from-red-500 to-red-400" />
+            <StressBar label="Transit Crowding" value={metrics.crowding_stress} color="from-cyan-500 to-cyan-400" />
           </div>
         </div>
 
         {/* Vulnerability */}
-        <div className="p-3 bg-slate-800/50 border border-slate-600 rounded-lg">
-          <div className="text-xs text-slate-300 font-semibold mb-1">
+        <div className="glass-panel p-4 border border-cyan-500/30 rounded-xl">
+          <div className="text-xs text-cyan-400 font-bold mb-2 uppercase tracking-wider">
             Vulnerability Factor
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-slate-700 rounded-full h-2">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-black/50 rounded-full h-3 border border-cyan-500/20">
               <div
-                className="bg-amber-500 h-2 rounded-full"
+                className="bg-gradient-to-r from-amber-500 to-amber-400 h-3 rounded-full shadow-lg shadow-amber-500/50"
                 style={{ width: `${metrics.vulnerability_factor * 100}%` }}
               ></div>
             </div>
-            <span className="text-sm font-semibold text-white">
+            <span className="text-sm font-bold text-cyan-400">
               {(metrics.vulnerability_factor * 100).toFixed(0)}%
             </span>
           </div>
@@ -92,11 +92,11 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
 
         {/* AI Summary */}
         {cell.summary && (
-          <div className="p-3 bg-slate-800/50 border border-slate-600 rounded-lg">
-            <div className="text-xs text-slate-300 font-semibold mb-2 uppercase tracking-wider">
-              groq
+          <div className="glass-panel p-4 border border-cyan-500/30 rounded-xl">
+            <div className="text-xs text-cyan-400 font-bold mb-2 uppercase tracking-wider">
+              AI Analysis
             </div>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-gray-300 leading-relaxed">
               {cell.summary.short}
             </p>
           </div>
@@ -104,10 +104,10 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
 
         {/* Interventions */}
         <div>
-          <h4 className="text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+          <h4 className="text-xs font-bold text-cyan-400 mb-3 uppercase tracking-wider">
             Recommended Interventions
           </h4>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <InterventionCard
               title="Tree Planting"
               score={interventions.trees.score}
@@ -136,13 +136,13 @@ export default function CellDetailsPanel({ cell, onClose }: CellDetailsPanelProp
 function StressBar({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-slate-300 mb-1">
-        <span>{label}</span>
-        <span className="font-semibold text-white">{(value * 100).toFixed(0)}%</span>
+      <div className="flex justify-between text-xs text-gray-300 mb-2">
+        <span className="font-medium">{label}</span>
+        <span className="font-bold text-cyan-400">{(value * 100).toFixed(0)}%</span>
       </div>
-      <div className="w-full bg-slate-700 rounded-full h-2">
+      <div className="w-full bg-black/50 rounded-full h-2.5 border border-cyan-500/20">
         <div
-          className={`${color} h-2 rounded-full transition-all`}
+          className={`bg-gradient-to-r ${color} h-2.5 rounded-full transition-all shadow-lg`}
           style={{ width: `${value * 100}%` }}
         ></div>
       </div>
@@ -162,24 +162,25 @@ function InterventionCard({
   impact: number;
 }) {
   return (
-    <div className="p-3 rounded-lg border border-slate-600 bg-slate-800/30">
+    <div className="glass-panel p-4 rounded-xl border border-cyan-500/30">
         <div className="flex-1">
-        <div className="font-semibold text-sm text-white">{title}</div>
-        <div className="text-xs text-slate-300 mt-0.5">{detail}</div>
+        <div className="font-bold text-sm text-cyan-400 mb-1">{title}</div>
+        <div className="text-xs text-gray-400 mb-2">{detail}</div>
           {impact < 0 && (
-          <div className="text-xs text-emerald-400 font-semibold mt-1">
-              Expected CSI reduction: {Math.abs(Math.round(impact))} points
+          <div className="text-xs text-cyan-400 font-semibold mb-3 flex items-center gap-1">
+              <span>Expected CSI reduction:</span>
+              <span className="text-cyan-300">{Math.abs(Math.round(impact))} points</span>
             </div>
           )}
-          <div className="mt-2 flex items-center gap-2">
-          <span className="text-[10px] text-slate-400">Priority:</span>
-          <div className="flex-1 bg-slate-700 rounded-full h-1.5">
+          <div className="mt-3 flex items-center gap-3">
+          <span className="text-xs text-gray-400">Priority:</span>
+          <div className="flex-1 bg-black/50 rounded-full h-2 border border-cyan-500/20">
               <div
-              className="bg-slate-400 h-1.5 rounded-full"
+              className="bg-gradient-to-r from-cyan-500 to-cyan-400 h-2 rounded-full shadow-lg shadow-cyan-500/50"
                 style={{ width: `${score * 100}%` }}
               ></div>
             </div>
-          <span className="text-xs font-semibold text-white">
+          <span className="text-xs font-bold text-cyan-400">
               {(score * 100).toFixed(0)}%
             </span>
         </div>

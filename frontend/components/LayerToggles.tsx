@@ -14,80 +14,84 @@ interface LayerTogglesProps {
 
 export default function LayerToggles({ layers, onToggle }: LayerTogglesProps) {
   return (
-    <div className="absolute bottom-6 left-6 z-10 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border-0 w-60">
-      <div className="p-4 space-y-3">
+    <div className="absolute bottom-6 left-6 z-10 glass-panel rounded-2xl shadow-2xl border border-cyan-500/30 w-64">
+      <div className="p-5 space-y-4">
+        <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-wider mb-3">
+          Map Layers
+        </h3>
+        
         {/* Layer toggles */}
-        <div className="space-y-1.5">
-          <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-cyan-500/10 p-2 rounded-lg transition-colors group">
             <input
               type="checkbox"
               checked={layers.csi}
               onChange={() => onToggle("csi")}
-              className="w-3.5 h-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+              className="w-4 h-4 rounded border-cyan-500/50 bg-black/50 text-cyan-500 focus:ring-cyan-500 focus:ring-2"
             />
-            <span className="text-xs font-medium text-slate-700">CSI Grid</span>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-cyan-300 transition-colors">CSI Grid</span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-cyan-500/10 p-2 rounded-lg transition-colors group">
             <input
               type="checkbox"
               checked={layers.trees}
               onChange={() => onToggle("trees")}
-              className="w-3.5 h-3.5 rounded border-slate-300 text-green-600 focus:ring-green-500"
+              className="w-4 h-4 rounded border-cyan-500/50 bg-black/50 text-green-500 focus:ring-green-500 focus:ring-2"
             />
-            <span className="text-xs font-medium text-slate-700">Trees</span>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-cyan-300 transition-colors">Trees</span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-cyan-500/10 p-2 rounded-lg transition-colors group">
             <input
               type="checkbox"
               checked={layers.planting}
               onChange={() => onToggle("planting")}
-              className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              className="w-4 h-4 rounded border-cyan-500/50 bg-black/50 text-emerald-500 focus:ring-emerald-500 focus:ring-2"
             />
-            <span className="text-xs font-medium text-slate-700">Planting</span>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-cyan-300 transition-colors">Planting Sites</span>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-cyan-500/10 p-2 rounded-lg transition-colors group">
             <input
               type="checkbox"
               checked={layers.hotspots}
               onChange={() => onToggle("hotspots")}
-              className="w-3.5 h-3.5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+              className="w-4 h-4 rounded border-cyan-500/50 bg-black/50 text-red-500 focus:ring-red-500 focus:ring-2"
             />
-            <span className="text-xs font-medium text-slate-700">Hotspots</span>
+            <span className="text-sm font-medium text-gray-300 group-hover:text-cyan-300 transition-colors">Hotspots</span>
           </label>
         </div>
 
         {/* CSI Legend */}
         {layers.csi && (
-          <div className="pt-3 border-t border-slate-200">
-            <h4 className="text-[10px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+          <div className="pt-4 border-t border-cyan-500/20">
+            <h4 className="text-xs font-semibold text-cyan-400 mb-3 uppercase tracking-wider">
               CSI Scale
             </h4>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-3 h-3 rounded"
+                  className="w-4 h-4 rounded border border-cyan-500/30"
                   style={{ backgroundColor: "rgb(100, 180, 100)" }}
                 ></div>
-                <span className="text-[11px] text-slate-600">0-40: Low</span>
+                <span className="text-xs text-gray-400">0-40: Low Stress</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-3 h-3 rounded"
+                  className="w-4 h-4 rounded border border-cyan-500/30"
                   style={{ backgroundColor: "rgb(220, 200, 70)" }}
                 ></div>
-                <span className="text-[11px] text-slate-600">
+                <span className="text-xs text-gray-400">
                   40-65: Moderate
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-3 h-3 rounded"
+                  className="w-4 h-4 rounded border border-cyan-500/30"
                   style={{ backgroundColor: "rgb(220, 20, 60)" }}
                 ></div>
-                <span className="text-[11px] text-slate-600">65-100: High</span>
+                <span className="text-xs text-gray-400">65-100: High Stress</span>
               </div>
             </div>
           </div>

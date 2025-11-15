@@ -12,22 +12,22 @@ interface HeaderProps {
 
 export default function Header({ scenario }: HeaderProps) {
   return (
-    <header className="absolute top-0 left-0 right-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
-      <div className="px-6 py-3">
+    <header className="absolute top-0 left-0 right-0 z-10 glass-panel border-b border-cyan-500/20">
+      <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-600">
               CityPulse Montréal
             </h1>
-            <p className="text-xs text-slate-400">Urban Stress Digital Twin</p>
+            <p className="text-xs text-cyan-300/70">Urban Stress Digital Twin</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                Year
+          <div className="flex items-center gap-4">
+            <div className="text-right glass-panel px-4 py-2 rounded-lg border border-cyan-500/30">
+              <div className="text-[10px] text-cyan-400/60 uppercase tracking-wider">
+                Scenario Year
               </div>
-              <div className="text-2xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold text-cyan-400">
                 {scenario === "current" ? "2025" : "2035"}
               </div>
             </div>
