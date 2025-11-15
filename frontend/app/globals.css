@@ -165,3 +165,39 @@
   box-shadow: 0 0 15px rgba(0, 255, 255, 1), 0 0 30px rgba(0, 255, 255, 0.6);
   transform: scale(1.1);
 }
+
+/* Custom scrollbar styling - seamless cyan glow */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 255, 255, 0.4), rgba(0, 200, 255, 0.4));
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0, 255, 255, 0.6), rgba(0, 200, 255, 0.6));
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.8);
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
