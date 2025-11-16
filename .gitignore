@@ -43,19 +43,6 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Data files (keep structure, ignore large files)
-backend/data/raw/*.csv
-backend/data/raw/*.json
-backend/data/raw/*.geojson
-backend/data/raw/*.zip
-backend/data/raw/*.shp
-backend/data/raw/*.shx
-backend/data/raw/*.dbf
-backend/data/raw/*.tif
-backend/data/raw/*.tiff
-backend/data/processed/*.geojson
-backend/data/processed/*.parquet
-
 # IDE
 .vscode/
 .idea/
@@ -73,4 +60,7 @@ coverage/
 # Logs
 *.log
 logs/
+
+# Data files (too large for GitHub)
+backend/data/
 
